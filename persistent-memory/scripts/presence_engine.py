@@ -165,6 +165,47 @@ def get_current_moment(hour, quiet_start=23, quiet_end=8):
         return "night"
     return None
 
+KILL_SWITCH_FILE = ".presence_paused"
+
+def is_paused():
+    """Check if presence is paused via kill switch."""
+    if not os.path.exists(KILL_SWITCH_FILE):
+        return False, None
+
+    try:
+        with open(KILL_SWITCH_FILE, "r") as f:
+            data = json.load(f)
+        resume_at = datetime.fromisoformat(data.get("resume_at", ""))
+        now = datetime.now(timezone.utc)
+        if now >= resume_at:
+            # Pause expired — remove file
+            os.remove(KILL_SWITCH_FILE)
+            return False, None
+        remaining = (resume_at - now).total_seconds() / 3600
+        return True, f"Paused until {resume_at.strftime('%H:%M')} ({remaining:.1f}h remaining)"
+    except (json.JSONDecodeError, ValueError, OSError):
+        os.remove(KILL_SWITCH_FILE)
+        return False, None
+
+def pause_presence(hours=8):
+    """Activate kill switch — pause presence for N hours."""
+    resume_at = datetime.now(timezone.utc) + timedelta(hours=hours)
+    with open(KILL_SWITCH_FILE, "w") as f:
+        json.dump({
+            "paused_at": datetime.now(timezone.utc).isoformat(),
+            "resume_at": resume_at.isoformat(),
+            "hours": hours
+        }, f)
+    print(f"OK: Presence paused for {hours}h (until {resume_at.strftime('%Y-%m-%d %H:%M UTC')})")
+
+def resume_presence():
+    """Deactivate kill switch."""
+    if os.path.exists(KILL_SWITCH_FILE):
+        os.remove(KILL_SWITCH_FILE)
+        print("OK: Presence resumed")
+    else:
+        print("Presence is not paused.")
+
 def load_config():
     """Load persistent-memory config."""
     if os.path.exists("persistent-memory.json"):
@@ -332,6 +373,12 @@ def check(db_path):
         print("Presence is disabled.")
         return
 
+    # Kill switch check
+    paused, reason = is_paused()
+    if paused:
+        print(f"Presence is PAUSED. {reason}")
+        return
+
     now = datetime.now(timezone.utc)
 
     # Load quiet hours from config
@@ -367,10 +414,18 @@ def main():
     parser.add_argument("--check", action="store_true", help="Check if should send now")
     parser.add_argument("--prepare", action="store_true", help="Prepare context for isolated agent")
     parser.add_argument("--force", help="Force a specific moment (morning/midday/afternoon/evening/night)")
+    parser.add_argument("--pause", type=float, nargs="?", const=8, help="Pause presence for N hours (default: 8)")
+    parser.add_argument("--resume", action="store_true", help="Resume presence (deactivate kill switch)")
     parser.add_argument("--db", default="memory.db", help="Database path")
     args = parser.parse_args()
 
-    if args.check:
+    if args.pause is not None:
+        pause_presence(args.pause)
+        return
+    elif args.resume:
+        resume_presence()
+        return
+    elif args.check:
         check(args.db)
     elif args.prepare:
         now = datetime.now(timezone.utc)

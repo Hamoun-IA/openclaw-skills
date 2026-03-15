@@ -485,6 +485,25 @@ Messages are NEVER sent at exact cron times. The engine uses probability, not sc
 - Daily limits per frequency level (active = max 3)
 - Sleeping hours (2h-6h) = no messages
 
+### Kill switch
+
+The user can pause presence at any time:
+
+```bash
+# Pause for 8 hours (default)
+scripts/presence_engine.py --pause
+
+# Pause for custom duration
+scripts/presence_engine.py --pause 12
+
+# Resume immediately
+scripts/presence_engine.py --resume
+```
+
+The agent should also detect natural language triggers: "silence", "pause", "tranquille", "laisse-moi", "j'ai besoin d'espace" → activate the kill switch automatically.
+
+Quiet hours are configured in `persistent-memory.json` (`presence.quietHours: "23:00-08:00"`). The setup wizard configures both.
+
 See `references/presence-activities.md` for activity catalogue and `references/presence-prompts.md` for image prompt templates.
 
 ## Error Handling

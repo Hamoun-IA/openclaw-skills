@@ -203,6 +203,19 @@ def setup_presence(workspace, config):
     else:
         print("  ⏭ Skipped. Add a photo later to assets/reference/face.jpg")
 
+    # Quiet hours
+    print()
+    print(colored("  Quiet hours (no proactive messages during this time)", "bold"))
+    quiet = ask("Quiet hours (format: HH:00-HH:00)", default="23:00-08:00")
+    config["presence"]["quietHours"] = quiet
+
+    # Kill switch default duration
+    print()
+    print(colored("  Kill switch", "bold"))
+    print("  The user can say 'silence' or 'pause' to temporarily stop presence.")
+    kill_hours = ask("Default pause duration (hours)", default="8")
+    config["presence"]["killSwitchHours"] = int(kill_hours)
+
     # Image provider
     providers = {
         "google": "Nano Banana Pro via Google API (recommended, uses same GOOGLE_API_KEY)",
