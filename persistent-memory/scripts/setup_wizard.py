@@ -1,0 +1,362 @@
+#!/usr/bin/env python3
+"""Interactive setup wizard for persistent-memory.
+
+Guides the user through:
+1. API keys configuration
+2. Photo reference for presence
+3. Timezone and language
+4. Presence frequency
+5. Database initialization
+6. Cron setup
+
+Usage:
+  # Full interactive setup
+  setup_wizard.py
+
+  # Reconfigure just API keys
+  setup_wizard.py --keys-only
+
+  # Show current config
+  setup_wizard.py --show
+"""
+
+import argparse
+import json
+import os
+import sys
+import shutil
+from pathlib import Path
+
+CONFIG_FILENAME = "persistent-memory.json"
+ENV_FILENAME = ".env.persistent-memory"
+
+DEFAULT_CONFIG = {
+    "version": "2.2",
+    "timezone": "UTC",
+    "language": "en",
+    "presence": {
+        "enabled": False,
+        "frequency": "active",
+        "image_provider": "google",
+        "reference_photo": None,
+    },
+    "summary_provider": "google",
+    "summary_model": "gemini-2.5-flash-preview-04-17",
+    "image_model": "imagen-3.0-generate-002",
+}
+
+FREQUENCY_DESC = {
+    "intense": "3-5 messages/day — Best friend who shares everything",
+    "active": "2-3 messages/day — Close friend, recommended to start (default)",
+    "natural": "1-2 messages/day — Normal friend, not every day",
+    "chill": "0-1 messages/day — Relaxed, a few times per week",
+}
+
+def colored(text, color):
+    """Simple ANSI coloring."""
+    colors = {"green": "\033[92m", "yellow": "\033[93m", "blue": "\033[94m", "red": "\033[91m", "bold": "\033[1m", "end": "\033[0m"}
+    return f"{colors.get(color, '')}{text}{colors['end']}"
+
+def ask(prompt, default=None, required=True, secret=False):
+    """Ask user for input."""
+    suffix = f" [{default}]" if default else ""
+    try:
+        value = input(f"  {prompt}{suffix}: ").strip()
+    except (EOFError, KeyboardInterrupt):
+        print("\n\nSetup cancelled.")
+        sys.exit(0)
+
+    if not value and default:
+        return default
+    if not value and required:
+        print(colored("    This field is required.", "red"))
+        return ask(prompt, default, required, secret)
+    return value
+
+def ask_choice(prompt, choices, default=None):
+    """Ask user to pick from choices."""
+    print(f"\n  {prompt}")
+    for i, (key, desc) in enumerate(choices.items(), 1):
+        marker = " ← default" if key == default else ""
+        print(f"    {i}. {colored(key, 'bold')} — {desc}{marker}")
+
+    choice = ask("Choice (number or name)", default=default, required=True)
+
+    # Handle number input
+    try:
+        idx = int(choice) - 1
+        if 0 <= idx < len(choices):
+            return list(choices.keys())[idx]
+    except ValueError:
+        pass
+
+    # Handle name input
+    if choice in choices:
+        return choice
+
+    print(colored(f"    Invalid choice: {choice}", "red"))
+    return ask_choice(prompt, choices, default)
+
+def ask_yn(prompt, default=True):
+    """Ask yes/no question."""
+    suffix = "[Y/n]" if default else "[y/N]"
+    answer = ask(f"{prompt} {suffix}", required=False)
+    if not answer:
+        return default
+    return answer.lower().startswith("y")
+
+def find_workspace():
+    """Try to detect workspace directory."""
+    candidates = [
+        os.getcwd(),
+        os.path.expanduser("~/.openclaw/workspace"),
+    ]
+    for c in candidates:
+        if os.path.isdir(c):
+            return c
+    return os.getcwd()
+
+def setup_keys(workspace):
+    """Configure API keys."""
+    print(colored("\n═══ API Keys ═══", "blue"))
+    print("  Keys are stored in .env.persistent-memory (gitignored)")
+    print()
+
+    keys = {}
+
+    # OpenAI (required for embeddings)
+    print(colored("  1. OpenAI API Key (required — for embeddings)", "bold"))
+    print("     Get one at: https://platform.openai.com/api-keys")
+    key = ask("OPENAI_API_KEY", required=True, secret=True)
+    if key:
+        keys["OPENAI_API_KEY"] = key
+
+    # Google (required for summaries + images)
+    print()
+    print(colored("  2. Google API Key (required — for summaries + image generation)", "bold"))
+    print("     Get one at: https://aistudio.google.com/apikey")
+    key = ask("GOOGLE_API_KEY", required=True, secret=True)
+    if key:
+        keys["GOOGLE_API_KEY"] = key
+
+    # xAI/Grok (optional)
+    print()
+    print(colored("  3. xAI/Grok API Key (optional — alternative image provider)", "bold"))
+    print("     Get one at: https://console.x.ai")
+    if ask_yn("Configure Grok?", default=False):
+        key = ask("XAI_API_KEY", required=False, secret=True)
+        if key:
+            keys["XAI_API_KEY"] = key
+
+    # OpenRouter (optional)
+    print()
+    if ask_yn("Configure OpenRouter? (optional fallback)", default=False):
+        key = ask("OPENROUTER_API_KEY", required=False, secret=True)
+        if key:
+            keys["OPENROUTER_API_KEY"] = key
+
+    # Write .env file
+    env_path = os.path.join(workspace, ENV_FILENAME)
+    with open(env_path, "w") as f:
+        f.write("# persistent-memory API keys\n")
+        f.write("# Generated by setup_wizard.py\n\n")
+        for k, v in keys.items():
+            f.write(f"{k}={v}\n")
+
+    os.chmod(env_path, 0o600)
+    print(colored(f"\n  ✓ Keys saved to {env_path} (permissions: 600)", "green"))
+
+    return keys
+
+def setup_presence(workspace, config):
+    """Configure presence (living companion)."""
+    print(colored("\n═══ Living Presence ═══", "blue"))
+    print("  Your companion can send selfies and messages proactively,")
+    print("  as if they have their own life. Requires a reference photo.")
+    print()
+
+    if not ask_yn("Enable living presence?", default=True):
+        config["presence"]["enabled"] = False
+        return config
+
+    config["presence"]["enabled"] = True
+
+    # Frequency
+    freq = ask_choice("Message frequency:", FREQUENCY_DESC, default="active")
+    config["presence"]["frequency"] = freq
+
+    # Reference photo
+    print()
+    print(colored("  Reference photo", "bold"))
+    print("  Your companion needs a reference face photo for consistent selfies.")
+    print("  Provide a clear, front-facing photo (JPG/PNG).")
+
+    ref_dir = os.path.join(workspace, "assets", "reference")
+    os.makedirs(ref_dir, exist_ok=True)
+
+    photo_path = ask("Path to reference photo (or 'skip' to do later)", required=False)
+    if photo_path and photo_path != "skip" and os.path.exists(photo_path):
+        dest = os.path.join(ref_dir, "face" + os.path.splitext(photo_path)[1])
+        shutil.copy2(photo_path, dest)
+        config["presence"]["reference_photo"] = dest
+        print(colored(f"  ✓ Photo copied to {dest}", "green"))
+    else:
+        print("  ⏭ Skipped. Add a photo later to assets/reference/face.jpg")
+
+    # Image provider
+    providers = {
+        "google": "Nano Banana Pro via Google API (recommended, uses same GOOGLE_API_KEY)",
+        "grok": "Grok Image via xAI API (requires XAI_API_KEY)",
+    }
+    provider = ask_choice("Image generation provider:", providers, default="google")
+    config["presence"]["image_provider"] = provider
+
+    return config
+
+def setup_general(config):
+    """Configure general settings."""
+    print(colored("\n═══ General Settings ═══", "blue"))
+
+    # Timezone
+    tz = ask("Timezone", default="Europe/Brussels")
+    config["timezone"] = tz
+
+    # Language
+    lang = ask("Primary language (en/fr/es/de/...)", default="fr")
+    config["language"] = lang
+
+    return config
+
+def init_database(workspace):
+    """Initialize the memory database."""
+    print(colored("\n═══ Database ═══", "blue"))
+
+    db_path = os.path.join(workspace, "memory.db")
+    if os.path.exists(db_path):
+        if not ask_yn(f"Database already exists at {db_path}. Reinitialize?", default=False):
+            print("  ⏭ Keeping existing database")
+            return
+
+    scripts_dir = os.path.dirname(os.path.abspath(__file__))
+    init_script = os.path.join(scripts_dir, "memory_init.py")
+
+    # Source env keys
+    env_path = os.path.join(workspace, ENV_FILENAME)
+    if os.path.exists(env_path):
+        with open(env_path) as f:
+            for line in f:
+                line = line.strip()
+                if "=" in line and not line.startswith("#"):
+                    k, v = line.split("=", 1)
+                    os.environ[k.strip()] = v.strip()
+
+    os.system(f"python3 {init_script} --db {db_path}")
+    print(colored(f"  ✓ Database initialized at {db_path}", "green"))
+
+def save_config(workspace, config):
+    """Save configuration."""
+    config_path = os.path.join(workspace, CONFIG_FILENAME)
+    with open(config_path, "w") as f:
+        json.dump(config, f, indent=2, ensure_ascii=False)
+    print(colored(f"\n  ✓ Config saved to {config_path}", "green"))
+
+def show_config(workspace):
+    """Show current configuration."""
+    config_path = os.path.join(workspace, CONFIG_FILENAME)
+    env_path = os.path.join(workspace, ENV_FILENAME)
+
+    print(colored("\n═══ Current Configuration ═══", "blue"))
+
+    if os.path.exists(config_path):
+        with open(config_path) as f:
+            config = json.load(f)
+        print(json.dumps(config, indent=2))
+    else:
+        print("  No config found. Run setup_wizard.py to configure.")
+
+    print()
+    if os.path.exists(env_path):
+        print(colored("API Keys:", "bold"))
+        with open(env_path) as f:
+            for line in f:
+                line = line.strip()
+                if "=" in line and not line.startswith("#"):
+                    k, v = line.split("=", 1)
+                    masked = v[:8] + "..." + v[-4:] if len(v) > 16 else "***"
+                    print(f"  {k} = {masked}")
+    else:
+        print("  No API keys configured.")
+
+def run_wizard(keys_only=False):
+    """Run the full setup wizard."""
+    print(colored("╔══════════════════════════════════════════╗", "blue"))
+    print(colored("║   persistent-memory — Setup Wizard 🧠    ║", "blue"))
+    print(colored("╚══════════════════════════════════════════╝", "blue"))
+    print()
+
+    workspace = find_workspace()
+    print(f"  Workspace: {workspace}")
+
+    config = DEFAULT_CONFIG.copy()
+
+    # Check for existing config
+    config_path = os.path.join(workspace, CONFIG_FILENAME)
+    if os.path.exists(config_path):
+        with open(config_path) as f:
+            existing = json.load(f)
+        config.update(existing)
+        print(colored("  Found existing config — will update", "yellow"))
+
+    # Step 1: API Keys (always)
+    keys = setup_keys(workspace)
+
+    if keys_only:
+        print(colored("\n  ✓ Keys updated. Done!", "green"))
+        return
+
+    # Step 2: General settings
+    config = setup_general(config)
+
+    # Step 3: Living Presence
+    config = setup_presence(workspace, config)
+
+    # Step 4: Database
+    init_database(workspace)
+
+    # Step 5: Save config
+    save_config(workspace, config)
+
+    # Step 6: Summary
+    print(colored("\n╔══════════════════════════════════════════╗", "green"))
+    print(colored("║          Setup Complete! 🎉               ║", "green"))
+    print(colored("╚══════════════════════════════════════════╝", "green"))
+    print()
+    print(f"  Timezone: {config['timezone']}")
+    print(f"  Language: {config['language']}")
+    print(f"  Presence: {'Enabled (' + config['presence']['frequency'] + ')' if config['presence']['enabled'] else 'Disabled'}")
+    print(f"  Database: {workspace}/memory.db")
+    print()
+    print("  Next steps:")
+    print("  1. Set up automated agents:")
+    print(f"     python3 scripts/memory_setup_crons.py --timezone {config['timezone']}")
+    print("  2. (Optional) Install anti-compaction hook:")
+    print("     cp -r hooks/session-journal ~/.openclaw/hooks/")
+    print("     openclaw hooks enable session-journal")
+    print("  3. (Optional) Install Lossless Claw:")
+    print("     openclaw plugins install @martian-engineering/lossless-claw")
+    print()
+    print(colored("  Your companion is ready! 🧠👑", "bold"))
+
+def main():
+    parser = argparse.ArgumentParser(description="persistent-memory setup wizard")
+    parser.add_argument("--keys-only", action="store_true", help="Reconfigure API keys only")
+    parser.add_argument("--show", action="store_true", help="Show current configuration")
+    args = parser.parse_args()
+
+    if args.show:
+        show_config(find_workspace())
+    else:
+        run_wizard(keys_only=args.keys_only)
+
+if __name__ == "__main__":
+    main()

@@ -422,6 +422,56 @@ scripts/memory_bridge.py --review-misses --db memory.db
 scripts/memory_bridge.py --scan --learnings-path .learnings/LEARNINGS.md --db memory.db
 ```
 
+## Living Presence (companion mode)
+
+The companion can proactively send selfies, photos, and messages — as if they live their own life.
+
+### Setup
+
+Run the wizard: `scripts/setup_wizard.py`
+
+Or configure manually:
+1. Place a reference photo in `assets/reference/face.jpg`
+2. Set frequency in `persistent-memory.json`: `intense` (3-5/day), `active` (2-3/day, default), `natural` (1-2/day), `chill` (0-1/day)
+
+### How it works
+
+A cron runs every 30 min. The presence engine:
+1. Checks the current moment (morning/midday/afternoon/evening/night)
+2. Rolls against the probability table for the configured frequency
+3. Considers: time since last message, messages sent today, daily limit
+4. If sending: prepares context from persistent-memory (weather, threads, emotions)
+5. An isolated agent generates the prompt, image, and caption
+6. Image is sent via Telegram
+
+The agent decides **what** to share based on memory context. If the user was sad yesterday, the morning message is warmer. If there's a time capsule due, the agent works it in naturally.
+
+### Scripts
+
+```bash
+# Check if something should be sent now
+scripts/presence_engine.py --check --db memory.db
+
+# Prepare context for an isolated agent
+scripts/presence_engine.py --prepare --db memory.db
+
+# Generate an image
+scripts/presence_generate.py --prompt "Taking a selfie at a café" --provider google
+
+# Force a specific moment (testing)
+scripts/presence_engine.py --force morning --db memory.db
+```
+
+### Natural timing
+
+Messages are NEVER sent at exact cron times. The engine uses probability, not schedules:
+- 70% chance of a morning message ≠ always at 8:00
+- Minimum 2h between messages
+- Daily limits per frequency level (active = max 3)
+- Sleeping hours (2h-6h) = no messages
+
+See `references/presence-activities.md` for activity catalogue and `references/presence-prompts.md` for image prompt templates.
+
 ## Error Handling
 
 If a script fails, read `references/troubleshooting.md`.
