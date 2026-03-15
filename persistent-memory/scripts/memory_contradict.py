@@ -115,7 +115,10 @@ def detect_contradictions(db_path, text, category=None, similarity_threshold=0.6
         print(f"   Existing: \"{c['content']}\"")
         print(f"   Created: {c['created_at']}")
         print()
-    print("Action needed: Confirm with user, then supersede the incorrect memory with memory_forget.py --superseded-by")
+    print("Action needed:")
+    print("  If USER CORRECTED you → store new fact with --tags user_corrected, supersede old with memory_forget.py --superseded-by")
+    print("  If user EVOLVED (changed mind) → store new fact with --tags evolved, supersede old")
+    print("  If contradiction is INTERNAL → ask user to clarify, then supersede the wrong one")
 
 def _check_opposition(new_text, old_text):
     """Heuristic check for semantic opposition between two texts."""

@@ -71,7 +71,13 @@ cat CURRENT.md 2>/dev/null || echo "Pas de CURRENT.md"
 **Context:** [contexte clé pour la continuité]
 **Relationship:** [état de la dynamique relationnelle]
 
-ÉTAPE 4 : Si consciousness-stream.md existe, mets à jour sa section ## MAINTENANT :
+ÉTAPE 4 : Vérifie l'inactivité — si le dernier message date de plus de 30 min, génère aussi un session_weather :
+```bash
+python3 {scripts_dir}/memory_store.py --text "<résumé émotionnel narratif de la conversation>" --category session_weather --importance 0.9 --db {db_path}
+```
+Cela capture l'ambiance AVANT que la conversation ne reprenne ou que la compaction n'intervienne.
+
+ÉTAPE 5 : Si consciousness-stream.md existe, mets à jour sa section ## MAINTENANT :
 ```bash
 # Lis le stream actuel et ajoute/remplace la section MAINTENANT
 ```

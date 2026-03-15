@@ -56,6 +56,9 @@ CREATE TABLE IF NOT EXISTS memory_tags (
 | `minor_detail` | 7 days | Trivial-but-intimate details |
 | `inside_joke` | None | Shared references, promoted from minor_detail |
 | `session_weather` | None | Narrative emotional summary at session end |
+| `milestone` | None | Founding relationship moments |
+| `shared_moment` | 90 days | Shared experiences (consolidable, never deletable) |
+| `dynamic` | None (mutable) | Observations about the relationship dynamic |
 
 ## Decay Rules
 

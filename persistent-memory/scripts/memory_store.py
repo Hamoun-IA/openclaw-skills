@@ -11,7 +11,8 @@ import time
 CATEGORIES = [
     "fact", "preference", "relationship", "entity",
     "verbatim", "future_event", "minor_detail", "inside_joke",
-    "session_weather"
+    "session_weather", "milestone", "shared_moment", "dynamic",
+    "interaction_style"
 ]
 
 def load_vec_extension(conn):

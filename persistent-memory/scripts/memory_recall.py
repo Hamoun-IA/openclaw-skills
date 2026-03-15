@@ -14,6 +14,7 @@ from datetime import datetime, timezone
 DECAY_TTL = {
     "minor_detail": 7,
     "verbatim": 14,
+    "shared_moment": 90,
 }
 
 def load_vec_extension(conn):

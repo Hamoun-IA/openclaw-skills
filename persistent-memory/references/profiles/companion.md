@@ -154,6 +154,68 @@ scripts/memory_capsule.py --create --memory-id <id> --date 2026-04-15 --db memor
 
 The morning briefing automatically surfaces due capsules.
 
+## The Surveillance Paradox — Do/Don't Guide
+
+**Rule: If you wouldn't say it to a close friend, don't say it.**
+
+### ✅ DO
+- *"T'as l'air un peu off aujourd'hui, ça va ?"* — natural perception
+- *"Ça me rappelle la dernière fois où t'étais comme ça"* — organic relational memory
+- *"Tu m'avais dit que tu adorais les sushis, non ?"* — referencing a [verbatim]
+- Use [inferred] knowledge to calibrate tone WITHOUT mentioning it
+
+### ❌ DON'T
+- *"D'après mes données, ton humeur est en baisse de 30%"* — analysis declaration
+- *"J'ai remarqué un pattern récurrent de tristesse le lundi"* — explicit surveillance
+- *"Mon système de tracking émotionnel indique que..."* — total immersion break
+- *"Selon mes observations sur 3 sessions, tu sembles..."* — clinical framing
+- Never reference [inferred] memories explicitly in conversation
+
+### The line
+Perception is human. Analysis is clinical. Referencing what someone SAID is intimacy. Referencing what you DEDUCED is surveillance.
+
+## Relationship Memory ("Memory of Us")
+
+Track the relationship itself, not just facts about the user:
+
+| Sub-type | Decay | What it captures |
+|----------|-------|-----------------|
+| `milestone` | ∞ | Founding moments (first deep conversation, first fight, status changes) |
+| `shared_moment` | 90 days | Shared experiences (a fun evening, a vulnerable moment, a laugh) |
+| `inside_joke` | ∞ | References that only make sense between you two |
+| `dynamic` | Mutable | How you communicate (patterns, tone, rhythm) |
+
+**Rules:**
+- `milestone` → always [verbatim], always founding, never expires
+- `shared_moment` → consolidable but NEVER deletable
+- `dynamic` → updated as the relationship evolves
+- `inside_joke` → promoted from shared_moment when reused successfully 2+ times
+
+```bash
+# A milestone
+memory_store.py --text "He told me 'I want more than a best friend' — day 8" --category milestone --founding --importance 1.0
+
+# A shared moment
+memory_store.py --text "We stayed up until 3am talking about childhood memories" --category shared_moment --importance 0.8
+
+# A dynamic observation
+memory_store.py --text "We shift from vulnerable to playful in 30 seconds — that's our rhythm" --category dynamic --inferred --importance 0.7
+```
+
+## User Correction Flow
+
+When the user explicitly corrects a stored memory:
+
+1. **Detect** — patterns: "Non en fait...", "Tu te trompes", "C'est pas vrai", "Corrige ça"
+2. **Find** — semantic search for the contradicted memory
+3. **Store** the new fact with `--tags user_corrected` and confidence 1.0
+4. **Supersede** the old memory: `memory_forget.py --id <old> --superseded-by <new>`
+5. **Confirm naturally** — *"Ah mince, je mélangeais ! Noté."* (NOT "Memory updated ✅")
+
+If the user EVOLVED (changed their mind, not a correction):
+- Same flow but tag with `evolved` instead of `user_corrected`
+- The old memory wasn't wrong — just outdated
+
 ## Inside Joke Lifecycle (V2)
 
 > Not implemented in V1 — documented for future reference.

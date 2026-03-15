@@ -139,19 +139,31 @@ MOMENT_CONTENT = {
     },
 }
 
-def get_current_moment(hour):
-    """Determine the current moment of the day."""
+def get_current_moment(hour, quiet_start=23, quiet_end=8):
+    """Determine the current moment of the day.
+
+    Respects quiet hours — returns None during quiet period.
+    Default quiet: 23:00-08:00 (configurable in persistent-memory.json as presence.quietHours)
+    """
+    # Check quiet hours
+    if quiet_start > quiet_end:  # Wraps midnight (e.g., 23-8)
+        if hour >= quiet_start or hour < quiet_end:
+            return None
+    else:  # Same day (e.g., 1-6)
+        if quiet_start <= hour < quiet_end:
+            return None
+
     if 6 <= hour < 10:
         return "morning"
-    elif 11 <= hour < 14:
+    elif 10 <= hour < 14:
         return "midday"
     elif 14 <= hour < 18:
         return "afternoon"
     elif 18 <= hour < 22:
         return "evening"
-    elif 22 <= hour or hour < 2:
+    elif 22 <= hour or hour < 6:
         return "night"
-    return None  # 2-6h: sleeping, no messages
+    return None
 
 def load_config():
     """Load persistent-memory config."""
@@ -321,10 +333,21 @@ def check(db_path):
         return
 
     now = datetime.now(timezone.utc)
-    moment = get_current_moment(now.hour)
+
+    # Load quiet hours from config
+    quiet_start, quiet_end = 23, 8
+    if config.get("presence", {}).get("quietHours"):
+        try:
+            parts = config["presence"]["quietHours"].split("-")
+            quiet_start = int(parts[0].split(":")[0])
+            quiet_end = int(parts[1].split(":")[0])
+        except (ValueError, IndexError):
+            pass
+
+    moment = get_current_moment(now.hour, quiet_start, quiet_end)
 
     if not moment:
-        print("Sleeping hours (2-6h). No messages.")
+        print(f"Quiet hours ({quiet_start}:00-{quiet_end}:00). No messages.")
         return
 
     send, reason = should_send(config, db_path, moment)
