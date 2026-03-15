@@ -6,7 +6,7 @@ A collection of professional-grade skills for [OpenClaw](https://github.com/open
 
 | Skill | Version | Description |
 |-------|---------|-------------|
-| [**persistent-memory**](./persistent-memory/README.md) | 2.0 | Long-term memory + session continuity + emotional intelligence — SQLite, sqlite-vec, GraphRAG |
+| [**persistent-memory**](./persistent-memory/README.md) | 3.4 | Complete AI companion — memory, emotions, living presence, relationship continuity (SQLite, sqlite-vec, GraphRAG) |
 
 ## What are Skills?
 
