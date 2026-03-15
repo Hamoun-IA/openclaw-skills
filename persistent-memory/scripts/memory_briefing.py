@@ -104,7 +104,36 @@ def generate_briefing(db_path):
             sections.append(f"- #{c['id']} [{c['category']}] {c['content']}")
         sections.append("")
 
-    # 6. Stats
+    # 6. Recent learnings (from bridge)
+    bridge_memories = conn.execute("""
+        SELECT id, content, category FROM memories
+        WHERE active = 1 AND source LIKE 'learning:%'
+        ORDER BY created_at DESC LIMIT 5
+    """).fetchall()
+
+    if bridge_memories:
+        sections.append("## 📚 Recent Learnings")
+        for m in bridge_memories:
+            sections.append(f"- #{m['id']} [{m['category']}] {m['content'][:80]}")
+        sections.append("")
+
+    # 7. Memory miss summary
+    try:
+        misses = conn.execute("""
+            SELECT type, COUNT(*) as count FROM memory_misses
+            WHERE created_at >= date('now', '-7 days')
+            GROUP BY type ORDER BY count DESC
+        """).fetchall()
+
+        if misses:
+            sections.append("## ⚠️ Memory Misses (7 days)")
+            for m in misses:
+                sections.append(f"- {m['type']}: {m['count']}x")
+            sections.append("")
+    except sqlite3.OperationalError:
+        pass
+
+    # 8. Stats
     stats = conn.execute("""
         SELECT
             COUNT(*) as total,

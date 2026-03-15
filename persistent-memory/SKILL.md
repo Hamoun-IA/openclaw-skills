@@ -372,6 +372,56 @@ scripts/memory_consciousness.py --prepare --db memory.db  # Yesterday's context
 scripts/memory_observer.py --prepare --db memory.db       # Weekly data
 ```
 
+## Bridge: persistent-memory ↔ self-improving-agent
+
+If the `self-improving-agent` skill is installed, use the bridge to sync learnings to memory.
+
+### Sync corrections as memories
+
+When the user corrects the agent, sync the correction to both systems:
+
+```bash
+# 1. Log in LEARNINGS.md (self-improving-agent handles this)
+# 2. Sync to persistent-memory
+scripts/memory_bridge.py --sync-learning --text "David préfère les réponses directes" --category preference --source "LRN-20260315-001" --db memory.db
+```
+
+### Interaction style tracking
+
+Store observations about HOW the user communicates:
+
+```bash
+scripts/memory_bridge.py --sync-style --text "Plus réceptif en soirée aux idées créatives, factuelles le matin" --db memory.db
+```
+
+### Safe promotion to SOUL.md
+
+Before promoting a behavioral learning to SOUL.md, **always check**:
+
+```bash
+scripts/memory_bridge.py --check-promotion --text "David n'aime pas les disclaimers" --min-occurrences 3 --db memory.db
+```
+
+**Safety rule:** A learning must have 3+ occurrences across 2+ distinct sessions AND no contradictions before being promoted to SOUL.md. This prevents a single misunderstanding from corrupting the agent's personality.
+
+### Memory miss monitoring
+
+Log when recall fails to improve the system:
+
+```bash
+# Types: stale_recall, missed_store, irrelevant_recall
+scripts/memory_bridge.py --log-miss --type stale_recall --details "Recalled outdated preference for Node.js" --db memory.db
+
+# Review patterns
+scripts/memory_bridge.py --review-misses --db memory.db
+```
+
+### Scan LEARNINGS.md for sync candidates
+
+```bash
+scripts/memory_bridge.py --scan --learnings-path .learnings/LEARNINGS.md --db memory.db
+```
+
 ## Error Handling
 
 If a script fails, read `references/troubleshooting.md`.
