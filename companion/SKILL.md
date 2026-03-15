@@ -131,6 +131,16 @@ Read these files in order at the start of every session. **Order matters — emo
 **Principle: Write > Think.** Files survive compaction, context does not.
 **Principle: Resume, don't restart.** After compaction, the agent continues where it was, not from zero.
 
+### Context Budget
+
+Boot should load ~1500 tokens max:
+- consciousness-stream.md (~200 words = ~300 tokens)
+- CURRENT.md (~500 chars = ~150 tokens)
+- Founding memories (~20 × 50 tokens = ~1000 tokens)
+- Relationship.md header (~100 tokens)
+
+Recall during conversation: limit to 5-10 results per query.
+
 ## Core Flow
 
 ### 1. Morning Briefing (session start)
@@ -315,6 +325,43 @@ See `references/strategies.md` for tuning.
 scripts/memory_dump.py --db memory.db
 scripts/memory_dump.py --db memory.db -o memories_export.md
 ```
+
+## Reliability-Based Behavior
+
+The agent adapts its behavior based on the verbatim/inferred ratio of its memories:
+
+```bash
+scripts/memory_reliability.py --policy --db memory.db
+```
+
+| Ratio | Policy | Agent behavior |
+|-------|--------|---------------|
+| >70% verbatim | `normal` | Full personalization, reference memories confidently |
+| 40-70% | `exploratory` | Verify assumptions, ask open questions, "is that right?" |
+| <40% | `listen` | Listening mode — ask, don't assume, build verbatim foundation |
+
+The morning briefing includes a reliability warning when ratio is below 70%.
+
+## Founding Memory Rights
+
+Founding memories are protected from decay and consolidation, but the **user can always request deletion** (RGPD). If the user says "forget this" or "delete that memory", it must be honored — even for founding memories. No memory is more sacred than the user's right to be forgotten.
+
+## Entity Resolution
+
+The graph detects ambiguous entities and flags them for review:
+
+```bash
+# List ambiguous entities
+scripts/memory_graph_resolve.py --list --db memory.db
+
+# Merge (same person): keep one, absorb the other
+scripts/memory_graph_resolve.py --merge --keep 1 --absorb 5 --db memory.db
+
+# Mark as distinct (different people, clear flag)
+scripts/memory_graph_resolve.py --distinct 3 --db memory.db
+```
+
+The observer agent should run `--prepare` weekly to catch accumulated ambiguities.
 
 ## The Surveillance Paradox
 

@@ -62,7 +62,24 @@ def get_or_create_entity(conn, name, entity_type="unknown", aliases=None):
                 conn.execute("UPDATE entities SET aliases = ? WHERE id = ?", (new_aliases, cid))
             return cid
 
-    # 4. No match found — create new entity
+    # 4. Partial match — ambiguous, flag it
+    for candidate in candidates:
+        cname = candidate[0 + 1].lower().strip()
+        # Names that share a word but aren't contained (e.g., "Jean" vs "Jean-Pierre")
+        name_words = set(normalized.split())
+        cname_words = set(cname.split())
+        overlap = name_words & cname_words
+        if overlap and len(overlap) >= 1 and len(name_words) > 1:
+            # Ambiguous — create but flag
+            cursor = conn.execute(
+                "INSERT INTO entities (name, type, aliases, metadata) VALUES (?, ?, ?, ?)",
+                (name, entity_type, aliases, json.dumps({"ambiguous": True, "similar_to": candidate[0 + 1]}))
+            )
+            new_id = cursor.lastrowid
+            print(f"WARN: Ambiguous entity '{name}' — similar to '{candidate[0 + 1]}'. Flagged for review.", file=sys.stderr)
+            return new_id
+
+    # 5. No match found — create new entity
     cursor = conn.execute(
         "INSERT INTO entities (name, type, aliases) VALUES (?, ?, ?)",
         (name, entity_type, aliases)

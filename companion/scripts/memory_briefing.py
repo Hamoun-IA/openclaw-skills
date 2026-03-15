@@ -165,7 +165,35 @@ def generate_briefing(db_path):
     except Exception:
         pass
 
-    # 9. Stats
+    # 9. Reliability indicator
+    try:
+        verbatim = conn.execute("""
+            SELECT COUNT(DISTINCT m.id) FROM memories m
+            JOIN memory_tags t ON t.memory_id = m.id
+            WHERE m.active = 1 AND (t.tag = 'founding' OR t.tag = 'user_corrected'
+                  OR m.category IN ('verbatim', 'milestone'))
+        """).fetchone()[0]
+
+        inferred = conn.execute("""
+            SELECT COUNT(DISTINCT m.id) FROM memories m
+            JOIN memory_tags t ON t.memory_id = m.id
+            WHERE m.active = 1 AND t.tag = 'inferred'
+        """).fetchone()[0]
+
+        if verbatim + inferred > 0:
+            ratio = verbatim / (verbatim + inferred)
+            if ratio < 0.4:
+                sections.append("## 🔴 Reliability: LOW")
+                sections.append(f"Only {verbatim} verbatim vs {inferred} inferred memories. LISTEN MODE: ask questions, don't assume.")
+                sections.append("")
+            elif ratio < 0.7:
+                sections.append("## 🟡 Reliability: MEDIUM")
+                sections.append(f"{verbatim} verbatim vs {inferred} inferred. Verify assumptions with open questions.")
+                sections.append("")
+    except Exception:
+        pass
+
+    # 10. Stats
     stats = conn.execute("""
         SELECT
             COUNT(*) as total,
