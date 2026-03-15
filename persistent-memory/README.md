@@ -145,6 +145,25 @@ memory_graph_query.py --from-entity "Alex" --to-entity "Brussels" --depth 3
 # Result: Alex → friend_of → David → lives_in → Brussels
 ```
 
+## Works with Lossless Claw
+
+For the best experience, pair this skill with [Lossless Claw (LCM)](https://github.com/Martian-Engineering/lossless-claw) — a plugin that replaces OpenClaw's compaction with a DAG-based system where **no message is ever lost**.
+
+| Layer | Tool | What it handles |
+|-------|------|----------------|
+| **Short-term** (intra-session) | Lossless Claw | Context continuity during conversation |
+| **Long-term** (cross-session) | persistent-memory | Memory, emotions, identity between sessions |
+
+```bash
+# Install both for complete memory
+openclaw plugins install @martian-engineering/lossless-claw
+cp -r persistent-memory ~/.openclaw/skills/
+```
+
+Without LCM, the skill's built-in hook + refresh agent handles intra-session continuity as a fallback.
+
+> *Lossless Claw by [Martian Engineering](https://github.com/Martian-Engineering) — MIT License*
+
 ## Automated Memory Cycle
 
 Set up the complete lifecycle with one command:

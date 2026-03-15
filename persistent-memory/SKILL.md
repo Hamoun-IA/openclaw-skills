@@ -19,7 +19,28 @@ Run once per agent: `scripts/memory_init.py --db memory.db`
 
 Load the appropriate profile from `references/profiles/` based on agent role. Default: `references/profiles/companion.md`. The profile defines extraction rules, categories, and recall strategies.
 
-## Session Continuity (anti-compaction)
+## Compatibility with Lossless Claw (LCM)
+
+This skill works best alongside the [Lossless Claw](https://github.com/Martian-Engineering/lossless-claw) plugin — a DAG-based context engine that replaces OpenClaw's built-in compaction. LCM handles intra-session continuity (short-term), this skill handles cross-session memory (long-term).
+
+**With LCM installed (recommended):**
+- LCM handles all intra-session context — no message is ever lost during a conversation
+- Disable the `session-journal` hook and the `memory-realtime-refresh` cron — they are redundant
+- Keep all other components: memory store/recall, graph, emotions, consciousness, observer, relationship
+- Install LCM: `openclaw plugins install @martian-engineering/lossless-claw`
+
+**Without LCM:**
+- The skill handles everything on its own with the session-journal hook + refresh agent
+- Less performant for intra-session continuity, but fully autonomous
+
+| Component | With LCM | Without LCM |
+|-----------|----------|-------------|
+| Intra-session continuity | ✅ LCM (DAG) | ⚠️ Hook + refresh |
+| Cross-session memory | ✅ This skill | ✅ This skill |
+| Emotion tracking | ✅ This skill | ✅ This skill |
+| Graph/Consciousness/Observer | ✅ This skill | ✅ This skill |
+
+## Session Continuity (anti-compaction — without LCM)
 
 The companion hook `session-journal` automatically captures all messages and periodically summarizes them into `.session_snapshot.md`. This file survives compaction and keeps the agent coherent during long conversations.
 

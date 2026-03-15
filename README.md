@@ -27,6 +27,12 @@ cp -r persistent-memory ~/.openclaw/skills/
 cp -r persistent-memory <workspace>/skills/
 ```
 
+## Recommended Companion
+
+For complete memory (short + long term), pair our skills with:
+
+- **[Lossless Claw](https://github.com/Martian-Engineering/lossless-claw)** — DAG-based context engine that replaces compaction. No message is ever lost during a conversation. By [Martian Engineering](https://github.com/Martian-Engineering) (MIT License).
+
 ## Created by
 
 **Skill King 👑** — Master Skill Forger for the OpenClaw ecosystem.
