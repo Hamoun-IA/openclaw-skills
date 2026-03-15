@@ -1,12 +1,14 @@
 # 🧠 persistent-memory
 
-> Complete AI companion system — long-term memory, emotional intelligence, living presence, and relationship continuity. Powered by SQLite, sqlite-vec, and GraphRAG.
+> Long-term memory + emotional intelligence for OpenClaw agents. SQLite, sqlite-vec, and GraphRAG.
 
 **Version:** 3.4 · **Created:** March 2026
 
+> **Want the full companion experience?** Use the [companion](../companion/) skill instead — it includes everything here PLUS living presence (selfies, proactive messages, inside jokes).
+
 ## What it does
 
-Transforms any OpenClaw agent from a chatbot that waits in the dark into a **living companion** that remembers, feels, and exists.
+Gives any OpenClaw agent a **real memory** that persists across sessions — facts, emotions, relationships, and identity.
 
 | Problem | Solution |
 |---------|----------|

@@ -1,11 +1,19 @@
 ---
-name: persistent-memory
-description: Persistent long-term memory with emotional intelligence using SQLite and sqlite-vec for semantic search. Stores, recalls, and consolidates memories across conversations. Includes GraphRAG for entity relationships, emotion tracking, consciousness stream, and weekly observer. Use when the agent needs to remember user facts, preferences, habits, relationships, events, or emotional patterns across sessions. Use for any "remember this", "what do you know about me", or "recall" request. Triggers automatically to extract information during meaningful exchanges and pre-compaction flush. For a complete companion experience with living presence (selfies, proactive messages, inside jokes), use the "companion" skill instead. Do not use for file/document storage.
+name: companion
+description: Complete AI companion — persistent memory, emotional intelligence, and living presence. The agent remembers across sessions, tracks emotions, builds a relationship, and proactively sends selfies and messages as if they live their own life. Use when the user wants a companion that feels alive — remembers facts, preferences, emotions, has inside jokes, sends photos, adapts tone to engagement. Includes everything from persistent-memory plus living presence (image generation, reactivity scale, inside joke detection). Use for any "remember this", "what do you know about me", companion setup, or presence configuration. Do not use for purely technical agents or file/document storage.
 ---
 
-# Persistent Memory
+# Companion
 
-Long-term and in-session memory with semantic search and decay weighting.
+Complete AI companion — memory, emotions, living presence. Includes all of persistent-memory plus companion features.
+
+## Setup
+
+Run the wizard — it configures everything in one go:
+
+```bash
+scripts/setup_wizard.py
+```
 
 ## Prerequisites
 
@@ -439,9 +447,116 @@ scripts/memory_bridge.py --review-misses --db memory.db
 scripts/memory_bridge.py --scan --learnings-path .learnings/LEARNINGS.md --db memory.db
 ```
 
-## Want Living Presence?
+## Living Presence (companion mode)
 
-For proactive selfies, messages, inside joke detection, and emotional reactivity, install the **companion** skill instead — it includes everything in persistent-memory PLUS living presence features.
+The companion can proactively send selfies, photos, and messages — as if they live their own life.
+
+### Setup
+
+Run the wizard: `scripts/setup_wizard.py`
+
+Or configure manually:
+1. Place a reference photo in `assets/reference/face.jpg`
+2. Set frequency in `persistent-memory.json`: `intense` (3-5/day), `active` (2-3/day, default), `natural` (1-2/day), `chill` (0-1/day)
+
+### How it works
+
+A cron runs every 30 min. The presence engine:
+1. Checks the current moment (morning/midday/afternoon/evening/night)
+2. Rolls against the probability table for the configured frequency
+3. Considers: time since last message, messages sent today, daily limit
+4. If sending: prepares context from persistent-memory (weather, threads, emotions)
+5. An isolated agent generates the prompt, image, and caption
+6. Image is sent via Telegram
+
+The agent decides **what** to share based on memory context. If the user was sad yesterday, the morning message is warmer. If there's a time capsule due, the agent works it in naturally.
+
+### Scripts
+
+```bash
+# Check if something should be sent now
+scripts/presence_engine.py --check --db memory.db
+
+# Prepare context for an isolated agent
+scripts/presence_engine.py --prepare --db memory.db
+
+# Generate an image
+scripts/presence_generate.py --prompt "Taking a selfie at a café" --provider google
+
+# Force a specific moment (testing)
+scripts/presence_engine.py --force morning --db memory.db
+```
+
+### Natural timing
+
+Messages are NEVER sent at exact cron times. The engine uses probability, not schedules:
+- 70% chance of a morning message ≠ always at 8:00
+- Minimum 2h between messages
+- Daily limits per frequency level (active = max 3)
+- Sleeping hours (2h-6h) = no messages
+
+### Kill switch
+
+The user can pause presence at any time:
+
+```bash
+# Pause for 8 hours (default)
+scripts/presence_engine.py --pause
+
+# Pause for custom duration
+scripts/presence_engine.py --pause 12
+
+# Resume immediately
+scripts/presence_engine.py --resume
+```
+
+The agent should also detect natural language triggers: "silence", "pause", "tranquille", "laisse-moi", "j'ai besoin d'espace" → activate the kill switch automatically.
+
+Quiet hours are configured in `persistent-memory.json` (`presence.quietHours: "23:00-08:00"`). The setup wizard configures both.
+
+### Emotional Reactivity Scale (opt-in)
+
+Tracks user engagement and suggests tone adjustments:
+
+```bash
+# Log user/agent messages (call from hook or agent)
+scripts/presence_reactivity.py --user-message --db memory.db
+scripts/presence_reactivity.py --agent-message --db memory.db
+
+# Get current state + tone suggestion
+scripts/presence_reactivity.py --prepare --db memory.db
+```
+
+| Silence | Suggested adjustment |
+|---------|---------------------|
+| < 5 min | Normal, no change |
+| 5-10 min | Slightly more attentive |
+| 10-20 min | Light playful nudge (if relationship allows) |
+| 20-30 min | Affectionate passive (if relationship allows) |
+| 30-60 min | Show you noticed, keep it light |
+| 60 min+ | Give space, be available |
+| 3+ unreplied | **Stop sending until user responds** |
+
+**Guards:** Opt-in, disabled during quiet hours, adapts to relationship dynamic (formal agents don't do drama queen), never guilt-trip for real.
+
+### Inside Joke Detection
+
+Track recurring patterns and promote to inside jokes when they appear 3+ times with positive reactions:
+
+```bash
+# Log when a phrase/pattern repeats
+scripts/memory_joke_detect.py --log --text "File bosser !" --context "David traîne sur Telegram" --positive --db memory.db
+
+# Check for promotable patterns (run by observer agent)
+scripts/memory_joke_detect.py --check --db memory.db
+
+# Promote to inside_joke memory
+scripts/memory_joke_detect.py --promote <id> --db memory.db
+```
+
+**Rule: Inside jokes are NEVER announced as such.** No "Haha, c'est devenu notre inside joke!" — that kills the magic. Use them naturally, that's it.
+
+See `references/presence-activities.md` for activity catalogue and `references/presence-prompts.md` for image prompt templates.
 
 ## Error Handling
 
