@@ -267,25 +267,34 @@ Never describe emotions with numbers or scales. Always use narrative:
 - ✅ *"Tired but relieved after resolving the server issue"*
 - ❌ *"Mood: 6/10"*
 
-## Automated Cycle (optional but recommended)
+## Automated Agent Cycle (optional but recommended)
 
-Set up the full memory lifecycle with one command:
+Three isolated agents run on a schedule, each with a clean context focused on their task:
 
 ```bash
-scripts/memory_setup_crons.py --timezone Europe/Brussels --provider google
+scripts/memory_setup_crons.py --timezone Europe/Brussels
 ```
 
-This shows you how to configure 3 automated jobs:
+| Time | Agent | Context | Output |
+|------|-------|---------|--------|
+| 23:30 | 🎭 **Agent Émotionnel** | Only today's emotions + weather | Emotional journal |
+| 07:00 | 🧠 **Agent Mémoire** | Only yesterday's data + journal | `consciousness-stream.md` |
+| Sun 11:00 | 👁️ **Agent Observateur** | Only 7 days of data | Weekly report |
 
-| Time | Job | What it does |
-|------|-----|-------------|
-| 23:30 | 🎭 **Emotional Journal** | Analyzes today's emotions → writes intimate journal |
-| 07:00 | 🧠 **Consciousness Stream** | Generates narrative identity snapshot → `consciousness-stream.md` |
-| Sunday 11:00 | 👁️ **Weekly Observer** | Meta-analysis of patterns, dynamics → weekly report |
+Each agent is an **isolated OpenClaw session** (`sessionTarget: "isolated"`) — no conversation history pollution, no context bleed. The scripts prepare the data (`--prepare`), the agent does the reasoning.
 
-The consciousness stream is read during the morning briefing. The emotional journal feeds into the next morning's consciousness. The observer catches what daily analysis misses.
+Use `--json` to get cron configurations ready to paste or create via the cron tool.
 
-**Estimated cost: ~$0.05/month** with Gemini 2.5 Flash.
+**The cycle:**
+```
+23:30  🎭 Émotionnel analyses → journal intime
+07:00  🧠 Mémoire reads journal → consciousness stream
+Boot   📋 Agent principal reads stream → starts day with full context
+Live   📓 Hook captures everything → snapshot survives compaction
+Sun    👁️ Observateur reads the week → patterns, signals, dynamics
+```
+
+**Cost: ~$0.05/month** · Each agent runs once/day for ~30 seconds.
 
 ### Emotion Tracking (during conversation)
 
@@ -297,7 +306,15 @@ scripts/memory_emotion.py --store --reaction "éclat de rire" --trigger "anecdot
 
 Valences: `positive`, `negative`, `neutral`, `mixed`
 
-The emotional journal (`--journal`) uses these to write the end-of-day entry.
+### Data Preparation (for agents)
+
+Each script supports `--prepare` to output raw data without calling an LLM — designed for agent consumption:
+
+```bash
+scripts/memory_emotion.py --prepare --db memory.db       # Today's emotions
+scripts/memory_consciousness.py --prepare --db memory.db  # Yesterday's context
+scripts/memory_observer.py --prepare --db memory.db       # Weekly data
+```
 
 ## Error Handling
 

@@ -92,6 +92,57 @@ def list_emotions(db_path, date_from=None, date_to=None):
         print(f"     Trigger: {r['trigger']}")
         print()
 
+def prepare_context(db_path):
+    """Output raw emotional data for an agent to analyze. No LLM call."""
+    conn = sqlite3.connect(db_path, timeout=10)
+    conn.row_factory = sqlite3.Row
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+    emotions = conn.execute(
+        "SELECT * FROM emotions WHERE created_at >= ? ORDER BY created_at",
+        (today,)
+    ).fetchall()
+
+    weather = conn.execute("""
+        SELECT content, created_at FROM memories
+        WHERE category = 'session_weather' AND active = 1 AND created_at >= ?
+        ORDER BY created_at DESC LIMIT 5
+    """, (today,)).fetchall()
+
+    # Recent verbatims and minor details
+    details = conn.execute("""
+        SELECT content, category, created_at FROM memories
+        WHERE category IN ('verbatim', 'minor_detail') AND active = 1 AND created_at >= ?
+        ORDER BY created_at DESC LIMIT 10
+    """, (today,)).fetchall()
+
+    conn.close()
+
+    print(f"# Emotional Data — {today}")
+    print()
+
+    if emotions:
+        print(f"## Emotions Tracked ({len(emotions)})")
+        for e in emotions:
+            ts = e["created_at"][11:16]
+            print(f"- [{ts}] **{e['reaction']}** → {e['trigger']} (intensity: {e['intensity']}, valence: {e['valence']})")
+        print()
+
+    if weather:
+        print(f"## Session Weather ({len(weather)})")
+        for w in weather:
+            print(f"- {w['content']}")
+        print()
+
+    if details:
+        print(f"## Verbatims & Details ({len(details)})")
+        for d in details:
+            print(f"- [{d['category']}] {d['content']}")
+        print()
+
+    if not emotions and not weather:
+        print("No emotional data for today.")
+
 def generate_journal(db_path, provider, model, output_dir=None):
     """Generate emotional journal for today."""
     conn = sqlite3.connect(db_path, timeout=10)
@@ -191,7 +242,8 @@ def main():
     parser.add_argument("--today", action="store_true", help="List today's emotions")
     parser.add_argument("--from-date", help="Start date YYYY-MM-DD")
     parser.add_argument("--to-date", help="End date YYYY-MM-DD")
-    parser.add_argument("--journal", action="store_true", help="Generate emotional journal")
+    parser.add_argument("--journal", action="store_true", help="Generate emotional journal (via external LLM)")
+    parser.add_argument("--prepare", action="store_true", help="Output raw data for an agent to analyze (no LLM call)")
     parser.add_argument("--journal-dir", default=".", help="Output directory for journal")
     parser.add_argument("--provider", default="google", choices=["google", "openrouter", "openai"])
     parser.add_argument("--model", help="Override model")
@@ -209,6 +261,8 @@ def main():
         list_emotions(args.db)
     elif args.from_date:
         list_emotions(args.db, args.from_date, args.to_date)
+    elif args.prepare:
+        prepare_context(args.db)
     elif args.journal:
         generate_journal(args.db, args.provider, model, args.journal_dir)
     else:

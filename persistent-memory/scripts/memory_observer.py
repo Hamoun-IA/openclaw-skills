@@ -166,6 +166,7 @@ def main():
     parser.add_argument("--db", default="memory.db", help="Database path")
     parser.add_argument("--provider", default="google", choices=["google", "openrouter", "openai"])
     parser.add_argument("--model", help="Override model")
+    parser.add_argument("--prepare", action="store_true", help="Output raw data for an agent to analyze (no LLM call)")
     parser.add_argument("--output", default=".", help="Output directory")
     args = parser.parse_args()
 
@@ -174,6 +175,10 @@ def main():
 
     if not context:
         print("No data found for the past 7 days.")
+        return
+
+    if args.prepare:
+        print(context)
         return
 
     print(f"Generating weekly observer report via {args.provider}/{model}...")

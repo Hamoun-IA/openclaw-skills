@@ -199,6 +199,7 @@ def main():
     parser.add_argument("--db", default="memory.db", help="Database path")
     parser.add_argument("--provider", default="google", choices=["google", "openrouter", "openai"])
     parser.add_argument("--model", help="Override model")
+    parser.add_argument("--prepare", action="store_true", help="Output raw data for an agent to analyze (no LLM call)")
     parser.add_argument("--output", default="consciousness-stream.md", help="Output file")
     args = parser.parse_args()
 
@@ -209,6 +210,10 @@ def main():
         print("No data found for consciousness generation. Writing minimal stream.")
         with open(args.output, "w") as f:
             f.write("# Consciousness Stream\n\n## Who I Am This Morning\nA new day begins. No memories from yesterday to reflect on — a fresh start.\n\n## Open Threads\n- None\n\n## Color of the Day\nblank canvas\n")
+        return
+
+    if args.prepare:
+        print(context)
         return
 
     print(f"Generating consciousness stream via {args.provider}/{model}...")
