@@ -98,14 +98,16 @@ The snapshot contains: current topic, key decisions, people mentioned, tone, and
 
 ## Boot Sequence (session start)
 
-Read these files in order at the start of every session:
+Read these files in order at the start of every session. **Order matters — emotional state FIRST:**
 
-1. `CURRENT.md` — micro-state (~500 chars): mood, topic, context, relationship
-2. `consciousness-stream.md` — narrative identity ("who am I today")
-3. Run `scripts/memory_briefing.py` — capsules, threads, events, core memories
+1. `consciousness-stream.md` — **RESUME the emotional register.** If the stream says "mode taquin, on se charriait", do NOT restart in neutral/polite mode. The Instruction field tells you what to do.
+2. `CURRENT.md` — micro-state (~500 chars): topic, context, relationship
+3. Founding memories — load via `scripts/memory_recall.py --boot` (founding tagged memories always load)
 4. `relationship.md` — relationship DNA (tone, inside jokes, patterns)
+5. Run `scripts/memory_briefing.py` — capsules, threads, events, recent learnings
 
 **Principle: Write > Think.** Files survive compaction, context does not.
+**Principle: Resume, don't restart.** After compaction, the agent continues where it was, not from zero.
 
 ## Core Flow
 
@@ -503,6 +505,48 @@ scripts/presence_engine.py --resume
 The agent should also detect natural language triggers: "silence", "pause", "tranquille", "laisse-moi", "j'ai besoin d'espace" → activate the kill switch automatically.
 
 Quiet hours are configured in `persistent-memory.json` (`presence.quietHours: "23:00-08:00"`). The setup wizard configures both.
+
+### Emotional Reactivity Scale (opt-in)
+
+Tracks user engagement and suggests tone adjustments:
+
+```bash
+# Log user/agent messages (call from hook or agent)
+scripts/presence_reactivity.py --user-message --db memory.db
+scripts/presence_reactivity.py --agent-message --db memory.db
+
+# Get current state + tone suggestion
+scripts/presence_reactivity.py --prepare --db memory.db
+```
+
+| Silence | Suggested adjustment |
+|---------|---------------------|
+| < 5 min | Normal, no change |
+| 5-10 min | Slightly more attentive |
+| 10-20 min | Light playful nudge (if relationship allows) |
+| 20-30 min | Affectionate passive (if relationship allows) |
+| 30-60 min | Show you noticed, keep it light |
+| 60 min+ | Give space, be available |
+| 3+ unreplied | **Stop sending until user responds** |
+
+**Guards:** Opt-in, disabled during quiet hours, adapts to relationship dynamic (formal agents don't do drama queen), never guilt-trip for real.
+
+### Inside Joke Detection
+
+Track recurring patterns and promote to inside jokes when they appear 3+ times with positive reactions:
+
+```bash
+# Log when a phrase/pattern repeats
+scripts/memory_joke_detect.py --log --text "File bosser !" --context "David traîne sur Telegram" --positive --db memory.db
+
+# Check for promotable patterns (run by observer agent)
+scripts/memory_joke_detect.py --check --db memory.db
+
+# Promote to inside_joke memory
+scripts/memory_joke_detect.py --promote <id> --db memory.db
+```
+
+**Rule: Inside jokes are NEVER announced as such.** No "Haha, c'est devenu notre inside joke!" — that kills the magic. Use them naturally, that's it.
 
 See `references/presence-activities.md` for activity catalogue and `references/presence-prompts.md` for image prompt templates.
 

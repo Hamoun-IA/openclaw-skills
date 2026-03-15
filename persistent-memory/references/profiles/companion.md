@@ -154,6 +154,29 @@ scripts/memory_capsule.py --create --memory-id <id> --date 2026-04-15 --db memor
 
 The morning briefing automatically surfaces due capsules.
 
+## Founding Moments Detection
+
+The agent detects high-emotional-charge moments and proposes to mark them as founding:
+
+**Auto-detect triggers:**
+- Relationship status change
+- First occurrence of an emotional event
+- Moment of shared vulnerability
+- User explicitly says "retiens ça" / "oublie jamais ça" / "c'est important"
+
+**Proposal (natural, not clinical):**
+- ✅ *"Ce moment compte, non ? Je le garde pour toujours."*
+- ✅ *"J'oublierai jamais ça."*
+- ❌ *"Souhaitez-vous marquer ce souvenir comme fondateur ?"*
+
+**Only the user confirms.** The agent proposes, the user decides.
+
+**Limit: ~20-30 founding moments max** — otherwise boot context becomes too heavy. If approaching the limit, the agent should be more selective in proposals.
+
+```bash
+memory_store.py --text "..." --category milestone --founding --importance 1.0 --db memory.db
+```
+
 ## The Surveillance Paradox — Do/Don't Guide
 
 **Rule: If you wouldn't say it to a close friend, don't say it.**

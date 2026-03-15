@@ -29,9 +29,12 @@ Given the data below (yesterday's memories, emotions, open threads, recent sessi
 
 # Consciousness Stream
 
-## State
-[2-3 factual sentences: what happened yesterday, what's pending, what matters today. Reference names and specifics.]
-[1 sentence: emotional weather — how the relationship feels right now. Grounded, not performative.]
+## MAINTENANT
+**Registre émotionnel actif :** [emoji + description — ton, mode relationnel]
+**Sujet en cours :** [Ce dont on parle, l'ambiance, le contexte]
+**Contexte relationnel :** [Dynamique actuelle entre agent et utilisateur]
+**Décisions/promesses récentes :** [Ce qu'on a décidé ou promis]
+**Instruction :** [Note pour le "futur moi" post-compaction. Ex: "ne pas redémarrer en mode formel — on se charriait"]
 
 ## Open Threads
 [Bullet list of active topics — things pending, unresolved, or ongoing]
@@ -39,14 +42,17 @@ Given the data below (yesterday's memories, emotions, open threads, recent sessi
 ## Color of the Day
 [A single evocative word or image. Examples: "bleu doux", "amber sunrise", "grey velvet"]
 
+## History (previous sessions, consolidated)
+[Brief summary of recent sessions — not verbatim, just the arc]
+
 RULES:
-- Facts first, feelings second — this is an operational document
+- The MAINTENANT section is THE MOST IMPORTANT — it defines how the agent behaves right now
+- The Instruction field is a note to the future self after compaction — be specific
 - Write in the same language as the source data
-- NO numbers, NO metrics — but also NO purple prose
+- NO numbers for emotions — but you CAN describe intensity narratively
 - Reference real details (names, events, decisions)
-- The emotional line should be HONEST, not performed
 - Only reference [verbatim] tagged memories explicitly — [inferred] ones inform tone but are NEVER cited
-- Keep under 150 words"""
+- Keep under 200 words"""
 
 def gather_context(db_path):
     """Collect all relevant data for consciousness generation."""
