@@ -7,6 +7,20 @@ description: Complete AI companion — persistent memory, emotional intelligence
 
 Complete AI companion — memory, emotions, living presence. Includes all of persistent-memory plus companion features.
 
+## What Companion Adds (over persistent-memory)
+
+| Feature | Script | What it does |
+|---------|--------|-------------|
+| 📸 **Living Presence** | `presence_engine.py` | Proactive selfies & messages with natural timing |
+| 🎨 **Image Generation** | `presence_generate.py` | Face-consistent photos (Google Imagen / Grok) |
+| 📊 **Reactivity Scale** | `presence_reactivity.py` | Adapts tone based on user engagement |
+| 🎯 **Inside Joke Detection** | `memory_joke_detect.py` | Auto-detects recurring patterns, promotes to jokes |
+| ⏸️ **Kill Switch** | `presence_engine.py --pause` | User says "silence" → presence pauses |
+| 🌙 **Quiet Hours** | Config: `presence.quietHours` | No messages during sleep (default 23:00-08:00) |
+| 🧙 **Setup Wizard** | `setup_wizard.py` | One-command interactive setup for everything |
+
+Everything from persistent-memory is included: memory store/recall, GraphRAG, emotions, consciousness stream, observer, briefing, threads, capsules, bridge, contradiction engine.
+
 ## Setup
 
 Run the wizard — it configures everything in one go:
@@ -169,7 +183,17 @@ scripts/memory_recall.py --query "conversation context" --session-id "<current_s
 
 This recovers the thread that compaction summarized.
 
-### 5. Pre-Compaction Flush
+### 5. Return After Silence (weather on comeback)
+
+When the user sends a message after 30+ minutes of silence, generate a session_weather for the PREVIOUS conversation phase BEFORE engaging with the new message:
+
+```bash
+scripts/memory_store.py --text "<narrative summary of how the previous conversation phase felt>" --category session_weather --importance 0.9 --db memory.db
+```
+
+This captures the emotional state while it's still fresh — triggered by the user's return, not by a timer during silence.
+
+### 6. Pre-Compaction Flush
 
 When receiving a memory flush prompt before compaction, extract all remaining unsaved information from the current conversation using the double-pass method. Store each memory, then generate a session_weather:
 
@@ -177,11 +201,11 @@ When receiving a memory flush prompt before compaction, extract all remaining un
 scripts/memory_store.py --text "<narrative emotional summary of the session so far>" --category session_weather --importance 0.9 --db memory.db
 ```
 
-### 6. Session End
+### 7. Session End
 
 At natural conversation end, store final session_weather if not already done during flush. Run the double-pass one last time for any remaining information.
 
-### 7. Forget (user request)
+### 8. Forget (user request)
 
 ```bash
 scripts/memory_forget.py --id <memory_id> --db memory.db
@@ -192,7 +216,7 @@ To supersede (correct a fact): store the new fact first, then:
 scripts/memory_forget.py --id <old_id> --superseded-by <new_id> --db memory.db
 ```
 
-### 8. Graph Update (after storing memories)
+### 9. Graph Update (after storing memories)
 
 After storing memories that mention people, places, pets, or events, extract entities and their relationships into the knowledge graph.
 
@@ -213,7 +237,7 @@ scripts/memory_graph_update.py --json '[
 
 Extract entities during the double-pass: after storing the memory, identify any named entities and relationships, then batch-update the graph.
 
-### 9. Graph Query (enriched recall)
+### 10. Graph Query (enriched recall)
 
 Use the graph to answer relationship questions or enrich vector search results:
 
@@ -236,7 +260,7 @@ scripts/memory_graph_query.py --dump --db memory.db
 - *"What do I know about cooking?"* → Vector search (`--query "cooking"`)
 - *"What's planned with Alex?"* → Graph (Alex's events) + Vector (context)
 
-### 10. Contradiction Check (before storing corrections)
+### 11. Contradiction Check (before storing corrections)
 
 When a new fact seems to contradict existing knowledge, check before storing:
 
@@ -246,7 +270,7 @@ scripts/memory_contradict.py --text "David déteste le café" --db memory.db
 
 If contradictions found: confirm with user, store the new fact, then supersede the old one.
 
-### 11. Open Threads (track unresolved topics)
+### 12. Open Threads (track unresolved topics)
 
 ```bash
 # Open a thread when user mentions a pending situation
@@ -264,7 +288,7 @@ scripts/memory_threads.py --touch <id> --db memory.db
 
 Follow up on open threads naturally, not forcefully. Mark stale after 14+ days without mention.
 
-### 12. Time Capsules (deliver at a future date)
+### 13. Time Capsules (deliver at a future date)
 
 ```bash
 # Store a memory, then create a capsule
@@ -278,14 +302,14 @@ scripts/memory_capsule.py --due --db memory.db
 scripts/memory_capsule.py --deliver <id> --db memory.db
 ```
 
-### 13. Consolidation (periodic)
+### 14. Consolidation (periodic)
 
 Preview: `scripts/memory_consolidate.py --dry-run --db memory.db`
 Apply: `scripts/memory_consolidate.py --db memory.db`
 
 See `references/strategies.md` for tuning.
 
-### 14. Export (human review)
+### 15. Export (human review)
 
 ```bash
 scripts/memory_dump.py --db memory.db
