@@ -75,6 +75,17 @@ cat .session_snapshot.md
 
 The snapshot contains: current topic, key decisions, people mentioned, tone, and recent raw messages.
 
+## Boot Sequence (session start)
+
+Read these files in order at the start of every session:
+
+1. `CURRENT.md` — micro-state (~500 chars): mood, topic, context, relationship
+2. `consciousness-stream.md` — narrative identity ("who am I today")
+3. Run `scripts/memory_briefing.py` — capsules, threads, events, core memories
+4. `relationship.md` — relationship DNA (tone, inside jokes, patterns)
+
+**Principle: Write > Think.** Files survive compaction, context does not.
+
 ## Core Flow
 
 ### 1. Morning Briefing (session start)
@@ -294,7 +305,31 @@ Live   📓 Hook captures everything → snapshot survives compaction
 Sun    👁️ Observateur reads the week → patterns, signals, dynamics
 ```
 
-**Cost: ~$0.05/month** · Each agent runs once/day for ~30 seconds.
+**Cost: ~$0.10/month** · Refresh runs 48x/day, others once/day or weekly.
+
+### CURRENT.md (real-time micro-state)
+
+Updated every 30 min by the refresh agent and during pre-compaction flush. Ultra-light (~500 chars):
+
+```bash
+# Manual update
+scripts/memory_current.py --mood "taquin" --topic "planning weekend" --relationship "complicité forte"
+
+# Auto-update from journal
+scripts/memory_current.py --from-journal .session_journal.jsonl --db memory.db
+```
+
+### Relationship DNA (evolving bond)
+
+Initialize once, then let the observer agent update it periodically:
+
+```bash
+# Initialize
+scripts/memory_relationship.py --init
+
+# Prepare data for agent analysis
+scripts/memory_relationship.py --prepare --db memory.db
+```
 
 ### Emotion Tracking (during conversation)
 
@@ -326,4 +361,5 @@ If a script fails, read `references/troubleshooting.md`.
 - `references/strategies.md` — Consolidation and maintenance
 - `references/migration.md` — Import from MEMORY.md
 - `references/troubleshooting.md` — Common errors and fixes
+- `references/compaction-config.md` — Recommended OpenClaw compaction settings
 - `references/profiles/companion.md` — Companion agent profile

@@ -41,6 +41,51 @@ def generate_cron_configs(timezone, db_path):
 
     jobs = [
         {
+            "name": "memory-realtime-refresh",
+            "description": "Every 30 min — an isolated agent reads recent messages and updates CURRENT.md + consciousness stream MAINTENANT section",
+            "schedule": {
+                "kind": "cron",
+                "expr": "*/30 * * * *",
+                "tz": timezone
+            },
+            "sessionTarget": "isolated",
+            "payload": {
+                "kind": "agentTurn",
+                "message": f"""Tu es l'Agent Refresh — ta mission est de maintenir CURRENT.md à jour.
+
+ÉTAPE 1 : Récupère l'état actuel :
+```bash
+python3 {scripts_dir}/memory_current.py --prepare --from-journal .session_journal.jsonl --db {db_path}
+```
+
+ÉTAPE 2 : Lis CURRENT.md actuel :
+```bash
+cat CURRENT.md 2>/dev/null || echo "Pas de CURRENT.md"
+```
+
+ÉTAPE 3 : Réécris CURRENT.md avec les infos à jour. Format strict (~500 chars MAX) :
+
+# CURRENT.md
+**Mood:** [humeur actuelle en 3-5 mots narratifs]
+**Topic:** [sujet en cours ou dernier sujet abordé]
+**Context:** [contexte clé pour la continuité]
+**Relationship:** [état de la dynamique relationnelle]
+
+ÉTAPE 4 : Si consciousness-stream.md existe, mets à jour sa section ## MAINTENANT :
+```bash
+# Lis le stream actuel et ajoute/remplace la section MAINTENANT
+```
+
+RÈGLES :
+- CURRENT.md doit faire MOINS de 500 caractères — c'est un micro-état
+- Sois précis : noms, sujets exacts, pas de vague
+- Si aucune activité récente, ne change rien""",
+                "timeoutSeconds": 60
+            },
+            "delivery": {"mode": "none"},
+            "enabled": True
+        },
+        {
             "name": "memory-emotional-journal",
             "description": "End-of-day emotional analysis — an isolated agent analyzes today's emotions and writes an intimate journal",
             "schedule": {
@@ -197,19 +242,22 @@ def print_config(jobs, timezone):
     print(f"  Timezone: {timezone}")
     print(f"  Mode: Isolated Agent Sessions (full LLM reasoning)")
     print()
-    print("  Daily cycle:")
-    print("  ┌─ 23:30  🎭 Agent Émotionnel (journal intime)")
-    print("  │              Isolated session — ne voit QUE les émotions")
+    print("  Cycle:")
+    print("  ┌─ */30   🔄 Agent Refresh (CURRENT.md + MAINTENANT)")
+    print("  │              Every 30 min — micro-état temps réel")
+    print("  │")
+    print("  ├─ 23:30  🎭 Agent Émotionnel (journal intime)")
+    print("  │              Isolated — ne voit QUE les émotions")
     print("  │")
     print("  ├─ 07:00  🧠 Agent Mémoire (consciousness stream)")
-    print("  │              Isolated session — ne voit QUE hier + journal")
+    print("  │              Isolated — ne voit QUE hier + journal")
     print("  │")
-    print("  ├─ Boot   📋 Morning Briefing (agent principal lit le stream)")
+    print("  ├─ Boot   📋 Morning Briefing (stream + CURRENT.md)")
     print("  │")
     print("  ├─ Live   📓 Session Journal (hook auto-capture)")
     print("  │")
     print("  └─ Dim    👁️  Agent Observateur (rapport hebdo)")
-    print("  11:00         Isolated session — ne voit QUE les 7 jours")
+    print("  11:00         Isolated — ne voit QUE les 7 jours")
     print()
     print("-" * 60)
     print("  HOW TO INSTALL")
