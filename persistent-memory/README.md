@@ -2,7 +2,7 @@
 
 > Long-term memory + session continuity for OpenClaw agents — powered by SQLite, sqlite-vec, and GraphRAG.
 
-**Version:** 1.5 · **Created:** March 2026
+**Version:** 2.0 · **Created:** March 2026
 
 ## What it does
 
@@ -51,7 +51,7 @@ Gives any OpenClaw agent a **real memory** that persists across sessions and sur
 
 Memories with decay lose relevance over time (anti-stalker). A recalled memory resets its decay — just like human memory.
 
-## Scripts (14)
+## Scripts (18)
 
 | Script | What it does |
 |--------|-------------|
@@ -69,6 +69,10 @@ Memories with decay lose relevance over time (anti-stalker). A recalled memory r
 | `memory_capsule.py` | Time-based memory delivery |
 | `memory_briefing.py` | Morning briefing (all-in-one boot) |
 | `memory_session_summary.py` | External conversation summarizer |
+| `memory_emotion.py` | Track emotions (reaction + trigger + intensity) + daily journal |
+| `memory_consciousness.py` | Morning consciousness stream (narrative identity) |
+| `memory_observer.py` | Weekly meta-analysis report |
+| `memory_setup_crons.py` | One-command automated cycle setup |
 
 ## Hook: session-journal
 
@@ -141,10 +145,27 @@ memory_graph_query.py --from-entity "Alex" --to-entity "Brussels" --depth 3
 # Result: Alex → friend_of → David → lives_in → Brussels
 ```
 
+## Automated Memory Cycle
+
+Set up the complete lifecycle with one command:
+
+```bash
+python3 scripts/memory_setup_crons.py --timezone Europe/Brussels --provider google
+```
+
+```
+23:30  🎭 Emotional Journal → analyzes today's emotions
+07:00  🧠 Consciousness Stream → "who am I this morning"
+Boot   📋 Morning Briefing → reads stream + capsules + threads
+Live   📓 Session Journal → auto-capture + external summary
+Sun    👁️  Weekly Observer → patterns, dynamics, insights
+```
+
+**Cost: ~$0.05/month** with Gemini 2.5 Flash.
+
 ## Roadmap
 
-- [ ] V2: Automatic inside joke promotion
-- [ ] V2: Emotional forecast (mood pattern analysis)
-- [ ] V2: Personality traits tracking
-- [ ] V2: Batch graph linking (consolidation-based)
+- [ ] Automatic inside joke promotion
+- [ ] Personality traits tracking
+- [ ] Batch graph linking (consolidation-based)
 - [ ] Additional profiles: technical, creative, research

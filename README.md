@@ -6,7 +6,7 @@ A collection of professional-grade skills for [OpenClaw](https://github.com/open
 
 | Skill | Version | Description |
 |-------|---------|-------------|
-| [**persistent-memory**](./persistent-memory/README.md) | 1.5 | Long-term memory + session continuity with SQLite, sqlite-vec, and GraphRAG |
+| [**persistent-memory**](./persistent-memory/README.md) | 2.0 | Long-term memory + session continuity + emotional intelligence — SQLite, sqlite-vec, GraphRAG |
 
 ## What are Skills?
 

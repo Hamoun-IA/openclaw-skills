@@ -103,6 +103,19 @@ def init_db(db_path):
             FOREIGN KEY (memory_id) REFERENCES memories(id) ON DELETE SET NULL
         );
         CREATE INDEX IF NOT EXISTS idx_threads_status ON open_threads(status);
+
+        -- Emotions tracking
+        CREATE TABLE IF NOT EXISTS emotions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            reaction TEXT NOT NULL,
+            trigger TEXT NOT NULL,
+            intensity REAL NOT NULL DEFAULT 0.5,
+            valence TEXT NOT NULL DEFAULT 'neutral',
+            session_id TEXT,
+            created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_emotions_created ON emotions(created_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_emotions_valence ON emotions(valence);
     """)
 
     conn.execute("""

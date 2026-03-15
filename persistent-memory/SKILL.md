@@ -267,6 +267,38 @@ Never describe emotions with numbers or scales. Always use narrative:
 - ✅ *"Tired but relieved after resolving the server issue"*
 - ❌ *"Mood: 6/10"*
 
+## Automated Cycle (optional but recommended)
+
+Set up the full memory lifecycle with one command:
+
+```bash
+scripts/memory_setup_crons.py --timezone Europe/Brussels --provider google
+```
+
+This shows you how to configure 3 automated jobs:
+
+| Time | Job | What it does |
+|------|-----|-------------|
+| 23:30 | 🎭 **Emotional Journal** | Analyzes today's emotions → writes intimate journal |
+| 07:00 | 🧠 **Consciousness Stream** | Generates narrative identity snapshot → `consciousness-stream.md` |
+| Sunday 11:00 | 👁️ **Weekly Observer** | Meta-analysis of patterns, dynamics → weekly report |
+
+The consciousness stream is read during the morning briefing. The emotional journal feeds into the next morning's consciousness. The observer catches what daily analysis misses.
+
+**Estimated cost: ~$0.05/month** with Gemini 2.5 Flash.
+
+### Emotion Tracking (during conversation)
+
+When a strong emotion is detected, store it:
+
+```bash
+scripts/memory_emotion.py --store --reaction "éclat de rire" --trigger "anecdote du chat" --intensity 0.9 --valence positive --db memory.db
+```
+
+Valences: `positive`, `negative`, `neutral`, `mixed`
+
+The emotional journal (`--journal`) uses these to write the end-of-day entry.
+
 ## Error Handling
 
 If a script fails, read `references/troubleshooting.md`.
