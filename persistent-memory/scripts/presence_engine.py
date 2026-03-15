@@ -252,6 +252,23 @@ def should_send(config, db_path, moment, tz_offset=0):
     last_sent = get_last_sent(db_path)
     now = datetime.now(timezone.utc)
 
+    # Presence confidence gate: don't send if no session_weather in 24h
+    conn = sqlite3.connect(db_path, timeout=10)
+    conn.row_factory = sqlite3.Row
+    latest_weather = conn.execute("""
+        SELECT created_at FROM memories
+        WHERE category = 'session_weather' AND active = 1
+        ORDER BY created_at DESC LIMIT 1
+    """).fetchone()
+    conn.close()
+
+    if latest_weather:
+        weather_age = (now - datetime.fromisoformat(
+            latest_weather["created_at"].replace("Z", "+00:00")
+        )).total_seconds()
+        if weather_age > 86400:  # 24h
+            return False, "No session_weather in 24h — not confident enough to send"
+
     # Don't send if we sent less than 2 hours ago
     if last_sent and (now - last_sent).total_seconds() < 7200:
         return False, "Sent less than 2 hours ago"

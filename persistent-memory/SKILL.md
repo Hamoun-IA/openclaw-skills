@@ -282,6 +282,21 @@ scripts/memory_dump.py --db memory.db
 scripts/memory_dump.py --db memory.db -o memories_export.md
 ```
 
+## The Surveillance Paradox
+
+Memories tagged `inferred` (agent's interpretation) influence tone but are NEVER cited explicitly. Only `verbatim` memories (user's actual words) can be referenced in conversation. The agent perceives — it does not declare its analysis.
+
+```bash
+# User said this → verbatim, can be referenced
+scripts/memory_store.py --text "Je sais pas ce que je ferais sans toi" --category verbatim --db memory.db
+
+# Agent interpreted this → inferred, influences tone only
+scripts/memory_store.py --text "David semble stressé par son travail" --category fact --inferred --db memory.db
+
+# Moment of vulnerability → founding, never expires
+scripts/memory_store.py --text "David s'est confié sur sa rupture" --category verbatim --founding --db memory.db
+```
+
 ## Deciding What to Store
 
 1. Personal information? → Store (`fact`, `preference`, `relationship`)

@@ -96,6 +96,8 @@ def main():
     parser.add_argument("--source", help="Source identifier")
     parser.add_argument("--session-id", help="Current session ID for in-session recall")
     parser.add_argument("--tags", help="Comma-separated tags")
+    parser.add_argument("--founding", action="store_true", help="Mark as founding memory (never expires)")
+    parser.add_argument("--inferred", action="store_true", help="Mark as inferred (agent interpretation, not user's words)")
     parser.add_argument("--db", default="memory.db", help="Database path")
     args = parser.parse_args()
 
@@ -103,7 +105,12 @@ def main():
         print("ERROR: importance must be between 0.0 and 1.0", file=sys.stderr)
         sys.exit(1)
 
-    tags = [t.strip() for t in args.tags.split(",")] if args.tags else None
+    tags = [t.strip() for t in args.tags.split(",")] if args.tags else []
+    if args.founding:
+        tags.append("founding")
+    if args.inferred:
+        tags.append("inferred")
+    tags = tags if tags else None
     store_memory(args.db, args.text, args.category, args.importance, args.source, args.session_id, tags)
 
 if __name__ == "__main__":

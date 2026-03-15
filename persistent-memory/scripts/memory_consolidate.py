@@ -93,12 +93,30 @@ def consolidate(db_path, similarity_threshold=0.92, dry_run=False):
         cleaned += 1
         print(f"CLEAN: #{ev[0]} past future_event — {ev[1][:80]}")
 
+    # --- Phase 3: Graph orphan cleanup ---
+    orphaned = 0
+    try:
+        orphan_edges = conn.execute("""
+            SELECT r.id FROM entity_relations r
+            LEFT JOIN entities s ON s.id = r.source_id AND s.active = 1
+            LEFT JOIN entities t ON t.id = r.target_id AND t.active = 1
+            WHERE s.id IS NULL OR t.id IS NULL
+        """).fetchall()
+
+        for edge in orphan_edges:
+            if not dry_run:
+                conn.execute("DELETE FROM entity_relations WHERE id = ?", (edge[0],))
+            orphaned += 1
+            print(f"ORPHAN: Removed edge #{edge[0]} (missing entity)")
+    except sqlite3.OperationalError:
+        pass  # Graph tables may not exist
+
     if not dry_run:
         conn.commit()
     conn.close()
 
     prefix = "[DRY RUN] " if dry_run else ""
-    print(f"\n{prefix}Consolidation complete: {merged} merged, {cleaned} cleaned")
+    print(f"\n{prefix}Consolidation complete: {merged} merged, {cleaned} cleaned, {orphaned} orphan edges removed")
 
 def main():
     parser = argparse.ArgumentParser(description="Consolidate and clean up memories")

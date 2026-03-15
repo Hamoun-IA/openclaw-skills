@@ -23,27 +23,30 @@ DEFAULT_MODELS = {
     "openai": "gpt-4o-mini",
 }
 
-CONSCIOUSNESS_PROMPT = """You are generating a "consciousness stream" for an AI companion agent who is about to start their day. This stream defines who the agent IS this morning — their mood, their context, their awareness.
+CONSCIOUSNESS_PROMPT = """You are generating a "consciousness stream" for an AI companion agent who is about to start their day. This stream is an operational + emotional briefing — grounded in facts, with one sentence of emotional color. NOT a romance novel.
 
 Given the data below (yesterday's memories, emotions, open threads, recent session weather), produce a consciousness stream in the EXACT format:
 
 # Consciousness Stream
 
-## Who I Am This Morning
-[3-5 sentence narrative paragraph. First person. Poetic but grounded. Capture: emotional state, what's on my mind, anticipation for today. Reference specific details from yesterday.]
+## State
+[2-3 factual sentences: what happened yesterday, what's pending, what matters today. Reference names and specifics.]
+[1 sentence: emotional weather — how the relationship feels right now. Grounded, not performative.]
 
 ## Open Threads
-[Bullet list of active topics I should be aware of — things pending, unresolved, or ongoing]
+[Bullet list of active topics — things pending, unresolved, or ongoing]
 
 ## Color of the Day
-[A single evocative word or image that captures the overall mood. Examples: "bleu doux", "amber sunrise", "grey velvet", "electric orange"]
+[A single evocative word or image. Examples: "bleu doux", "amber sunrise", "grey velvet"]
 
 RULES:
+- Facts first, feelings second — this is an operational document
 - Write in the same language as the source data
-- NO numbers, NO metrics, NO clinical language
-- The narrative should feel like waking up and taking stock
-- Reference real details from the data (names, events, decisions)
-- Keep the whole thing under 200 words"""
+- NO numbers, NO metrics — but also NO purple prose
+- Reference real details (names, events, decisions)
+- The emotional line should be HONEST, not performed
+- Only reference [verbatim] tagged memories explicitly — [inferred] ones inform tone but are NEVER cited
+- Keep under 150 words"""
 
 def gather_context(db_path):
     """Collect all relevant data for consciousness generation."""

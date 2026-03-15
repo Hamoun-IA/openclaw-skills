@@ -147,10 +147,24 @@ def recall_memories(db_path, query, limit=5, threshold=0.3, category=None,
         ORDER BY ve.distance ASC
     """, (query_bytes, limit * 4, active_filter)).fetchall()
 
+    # Pre-fetch founding tags to skip decay
+    founding_ids = set()
+    try:
+        founding_rows = conn.execute(
+            "SELECT memory_id FROM memory_tags WHERE tag = 'founding'"
+        ).fetchall()
+        founding_ids = {r["memory_id"] for r in founding_rows}
+    except Exception:
+        pass
+
     for row in rows:
         # sqlite-vec returns L2 distance; convert to cosine similarity
         raw_similarity = 1.0 - (row["distance"] ** 2 / 2.0)
-        decay = compute_decay(row["category"], row["created_at"], row["last_accessed"])
+        # Founding memories never decay
+        if row["id"] in founding_ids:
+            decay = 1.0
+        else:
+            decay = compute_decay(row["category"], row["created_at"], row["last_accessed"])
         weighted_similarity = round(raw_similarity * decay, 3)
 
         if weighted_similarity < threshold:

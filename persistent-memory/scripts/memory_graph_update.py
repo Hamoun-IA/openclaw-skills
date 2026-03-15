@@ -22,15 +22,47 @@ import sqlite3
 import sys
 
 def get_or_create_entity(conn, name, entity_type="unknown", aliases=None):
-    """Get existing entity or create new one. Returns entity id."""
+    """Get existing entity or create new one. Returns entity id.
+
+    Entity Resolution: before creating, checks for similar entities
+    to prevent fragmentation (Alex / mon ami Alex / Alexandre = same person).
+    """
+    # 1. Exact match (case-insensitive)
     row = conn.execute(
         "SELECT id FROM entities WHERE name = ? COLLATE NOCASE AND type = ?",
         (name, entity_type)
     ).fetchone()
-
     if row:
         return row[0]
 
+    # 2. Check aliases
+    row = conn.execute(
+        "SELECT id, name FROM entities WHERE aliases LIKE ? COLLATE NOCASE AND type = ?",
+        (f"%{name}%", entity_type)
+    ).fetchone()
+    if row:
+        return row[0]
+
+    # 3. Fuzzy match: check if name is contained in existing entity names or vice versa
+    normalized = name.lower().strip()
+    candidates = conn.execute(
+        "SELECT id, name, aliases FROM entities WHERE type = ? AND active = 1",
+        (entity_type,)
+    ).fetchall()
+
+    for candidate in candidates:
+        cname = candidate[0 + 1].lower().strip()  # name column
+        # "Alex" matches "Alexandre", "mon ami Alex" matches "Alex"
+        if normalized in cname or cname in normalized:
+            # Found a likely match — add as alias if not already
+            cid = candidate[0]
+            existing_aliases = candidate[2] or ""
+            if name.lower() not in existing_aliases.lower():
+                new_aliases = f"{existing_aliases}, {name}".strip(", ")
+                conn.execute("UPDATE entities SET aliases = ? WHERE id = ?", (new_aliases, cid))
+            return cid
+
+    # 4. No match found — create new entity
     cursor = conn.execute(
         "INSERT INTO entities (name, type, aliases) VALUES (?, ?, ?)",
         (name, entity_type, aliases)

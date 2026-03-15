@@ -28,6 +28,23 @@ def generate_briefing(db_path):
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     sections = []
 
+    # 0. Rip Van Winkle detection — silence > 7 days
+    latest_interaction = conn.execute("""
+        SELECT MAX(created_at) as last FROM memories WHERE active = 1
+    """).fetchone()
+
+    if latest_interaction and latest_interaction["last"]:
+        try:
+            last_dt = datetime.fromisoformat(latest_interaction["last"].replace("Z", "+00:00"))
+            silence_days = (datetime.now(timezone.utc) - last_dt).days
+            if silence_days >= 7:
+                sections.append(f"## ⚠️ Long Silence Detected ({silence_days} days)")
+                sections.append("Enter listening mode. Do not assume where the conversation left off.")
+                sections.append("Ask how the user has been. Do not bombard with old context.")
+                sections.append("")
+        except (ValueError, TypeError):
+            pass
+
     # 1. Session Weather (last emotional state)
     weather = conn.execute("""
         SELECT content, created_at FROM memories
@@ -133,7 +150,22 @@ def generate_briefing(db_path):
     except sqlite3.OperationalError:
         pass
 
-    # 8. Stats
+    # 8. Observer minimum threshold check
+    try:
+        week_ago = (datetime.now(timezone.utc) - timedelta(days=7)).strftime("%Y-%m-%d")
+        session_count = conn.execute("""
+            SELECT COUNT(DISTINCT date(created_at)) as days FROM memories
+            WHERE category = 'session_weather' AND active = 1 AND created_at >= ?
+        """, (week_ago,)).fetchone()
+
+        if session_count and session_count["days"] < 3:
+            sections.append(f"## 📊 Observer Note")
+            sections.append(f"Only {session_count['days']} active sessions this week (minimum 3 for weekly report).")
+            sections.append("")
+    except Exception:
+        pass
+
+    # 9. Stats
     stats = conn.execute("""
         SELECT
             COUNT(*) as total,

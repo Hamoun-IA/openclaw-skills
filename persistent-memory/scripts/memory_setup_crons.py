@@ -87,10 +87,10 @@ RÈGLES :
         },
         {
             "name": "memory-emotional-journal",
-            "description": "End-of-day emotional analysis — an isolated agent analyzes today's emotions and writes an intimate journal",
+            "description": "Early-morning emotional analysis — an isolated agent analyzes yesterday's emotions and writes an intimate journal",
             "schedule": {
                 "kind": "cron",
-                "expr": "30 23 * * *",
+                "expr": "0 5 * * *",
                 "tz": timezone
             },
             "sessionTarget": "isolated",
@@ -246,8 +246,8 @@ def print_config(jobs, timezone):
     print("  ┌─ */30   🔄 Agent Refresh (CURRENT.md + MAINTENANT)")
     print("  │              Every 30 min — micro-état temps réel")
     print("  │")
-    print("  ├─ 23:30  🎭 Agent Émotionnel (journal intime)")
-    print("  │              Isolated — ne voit QUE les émotions")
+    print("  ├─ 05:00  🎭 Agent Émotionnel (journal intime)")
+    print("  │              Isolated — ne voit QUE les émotions d'hier")
     print("  │")
     print("  ├─ 07:00  🧠 Agent Mémoire (consciousness stream)")
     print("  │              Isolated — ne voit QUE hier + journal")
