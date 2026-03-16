@@ -2,7 +2,7 @@
 
 > Romantic AI partner — from seduction to deep bond. Virtual dates, calibrated jealousy, evolving relationship phases, NSFW via Grok bridge.
 
-**Version:** 1.2 · **Created:** March 2026
+**Version:** 1.3 · **Created:** March 2026
 
 ## What it does
 
