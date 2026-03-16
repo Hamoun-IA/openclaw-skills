@@ -131,6 +131,56 @@ If `sessions_send` times out or returns no response:
    - "🛑 [Agent] ne répond pas. Options : (1) réessayer, (2) j'essaie moi-même, (3) on abandonne"
 3. Never silently give up
 
+## Promise Tracker (Restart Survival)
+
+The #1 broken promise in multi-agent setups: "I'll get back to you" → restart → silence forever.
+
+### How it works
+
+Every promise is logged to `.agent_promises.jsonl` BEFORE acting. On boot, the agent checks for unfulfilled promises.
+
+### The protocol
+
+**Before any promise:**
+```
+1. Write to .agent_promises.jsonl: {promise, target, status: "pending", timeout_minutes}
+2. Send departure signal to human
+3. Execute the action (sessions_send, restart, etc.)
+```
+
+**On completion:**
+```
+4. Update promise status to "fulfilled"
+5. Send completion report
+```
+
+**On boot (after restart):**
+```
+6. Read .agent_promises.jsonl
+7. For each pending promise:
+   - Age < timeout → retry the action
+   - Age > timeout → report to human: "⚠️ Before restart, I promised X. Status: unresolved. Retry?"
+8. Clean fulfilled promises older than 24h
+```
+
+### Restart announcement
+
+When an agent is about to restart:
+```
+message: "⚡ Restart en cours. Tâches en vol: [list]. Je reprends après."
+→ Log all in-flight delegations as promises
+→ On return: check each one, report status
+```
+
+### The human ALWAYS gets closure
+
+```
+Before restart: "⚡ Restart, Nova bosse sur le rapport, je vérifie après"
+After restart:  "✅ De retour ! Nova a fini : [summary]"
+```
+
+No silence. No forgotten promises. See `references/promise-tracker.md` for full specification.
+
 ## See Also
 
 See `references/examples.md` for 8 complete real-world examples covering all patterns.
