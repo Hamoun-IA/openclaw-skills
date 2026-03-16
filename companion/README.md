@@ -2,7 +2,7 @@
 
 > Your AI friend that remembers, feels, and lives. Complete companion system — persistent memory, emotional intelligence, and living presence in one skill.
 
-**Version:** 3.8 · **Created:** March 2026
+**Version:** 3.9 · **Created:** March 2026
 
 ## What makes it different
 
@@ -125,7 +125,7 @@ Tracks undated dreams and life goals ("veut vivre au Portugal", "apprendre le pi
 - `memory_reliability.py` — computes verbatim/inferred ratio → sets feature gate mode
 - `memory_graph_resolve.py` — entity resolution (merge ambiguous/duplicate entities)
 
-## Advanced Companion Features (v3.5–3.8)
+## Advanced Companion Features (v3.5–3.9)
 
 | Feature | Description |
 |---------|-------------|
