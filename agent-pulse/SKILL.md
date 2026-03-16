@@ -179,7 +179,15 @@ Before restart: "⚡ Restart, Nova bosse sur le rapport, je vérifie après"
 After restart:  "✅ De retour ! Nova a fini : [summary]"
 ```
 
-No silence. No forgotten promises. See `references/promise-tracker.md` for full specification.
+### Safety mechanisms
+
+- **Idempotency** — each promise has an `idempotency_key`. Before retrying, verify the target didn't already receive the action. Never blindly resend.
+- **Circuit breaker** — `max_retries: 3`. After 3 failed retries → mark failed, alert human. No infinite loops.
+- **Atomic writes** — write to `.tmp` then rename. Crash during write = old file intact.
+- **File hygiene** — archive fulfilled promises after 24h. Weekly compaction.
+- **Late resolution** — if action completes AFTER timeout alert → send "✅ Finalement résolu"
+
+No silence. No forgotten promises. No double-sends. See `references/promise-tracker.md` for full specification.
 
 ## See Also
 

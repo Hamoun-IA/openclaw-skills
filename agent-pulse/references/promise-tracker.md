@@ -14,42 +14,104 @@ Location: `~/.openclaw/workspace/.agent_promises.jsonl`
 
 Format:
 ```jsonl
-{"id":"p1","agent":"debug","target":"nova","action":"sessions_send","promise":"Je check avec Nova et je te reviens","status":"pending","created":"2026-03-16T23:00:00Z","timeout_minutes":10}
-{"id":"p2","agent":"debug","target":"human","action":"restart","promise":"Je fais un restart et je reviens","status":"pending","created":"2026-03-16T23:05:00Z","timeout_minutes":5}
+{"id":"550e8400-e29b-41d4-a716-446655440000","agent":"debug","target":"nova","action":"sessions_send","promise":"Je check avec Nova et je te reviens","status":"pending","created":"2026-03-16T23:00:00Z","timeout_minutes":10,"action_started_at":null,"retry_count":0,"max_retries":3,"idempotency_key":"debug-nova-report-20260316"}
 ```
+
+### Field Reference
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `id` | Yes | UUID (not sequential — avoids collision between agents) |
+| `agent` | Yes | Agent that made the promise |
+| `target` | Yes | Who the action is directed at |
+| `action` | Yes | What type (sessions_send, restart, etc.) |
+| `promise` | Yes | Human-readable description |
+| `status` | Yes | pending / fulfilled / failed / expired |
+| `created` | Yes | ISO timestamp |
+| `timeout_minutes` | Yes | Max time before alerting human |
+| `action_started_at` | No | Set when action begins (for idempotency) |
+| `retry_count` | Yes | Number of retries attempted (default: 0) |
+| `max_retries` | Yes | Max retries before giving up (default: 3) |
+| `idempotency_key` | No | Unique key to prevent duplicate actions |
 
 ### Lifecycle
 
 ```
 1. Agent promises something to the human
-   → WRITE to .agent_promises.jsonl BEFORE acting
-   
-2. Action completes (sessions_send response, restart done, etc.)
+   → Generate UUID + idempotency_key
+   → ATOMIC WRITE to .agent_promises.jsonl (write to .tmp, then rename)
+   → This guarantees the promise exists even if the agent crashes mid-action
+
+2. Action begins
+   → SET action_started_at = now
+   → Execute the action (sessions_send, restart, etc.)
+
+3. Action completes
    → UPDATE status to "fulfilled"
    → Send completion report to human
 
-3. Agent restarts / reboots
+4. Agent restarts / reboots
    → On boot: READ .agent_promises.jsonl
    → Find status="pending" entries
-   → For each: either retry or report to human
+   → For each:
+      a. Check idempotency_key — if target already received the action, mark fulfilled
+      b. If retry_count >= max_retries → mark "failed", alert human
+      c. If action_started_at is set (was mid-action) → check target status before retry
+      d. Otherwise → retry, increment retry_count
 
-4. Promise times out (timeout_minutes exceeded)
+5. Promise times out (timeout_minutes exceeded)
    → Alert the human: "⚠️ J'avais promis X mais c'est resté sans réponse"
+   → If action completed AFTER timeout alert → send "✅ Finalement résolu: X"
 ```
+
+### Safety Mechanisms
+
+**🔴 Fix 1 — Idempotency (no double actions):**
+Before retrying, check if the action already happened:
+- Query the target agent: "Did you already receive [idempotency_key]?"
+- If `action_started_at` is set, the action WAS sent — verify target received it before resending
+- Never blindly retry a sessions_send
+
+**🔴 Fix 2 — Circuit Breaker (no infinite loops):**
+- `max_retries: 3` (default) — after 3 failed retries, mark as "failed" and alert human
+- `retry_count` incremented at each attempt
+- After max_retries: "🛑 Promise failed after 3 retries: [promise]. Manual action needed."
+- A promise can NEVER be retried after reaching max_retries
+
+**🔴 Fix 3 — Atomic Writes (no lost promises):**
+- Write to `.agent_promises.jsonl.tmp` first
+- Then `rename()` to `.agent_promises.jsonl` (atomic on all filesystems)
+- If crash during write → old file intact, promise from before crash preserved
+- On boot: if `.tmp` exists, it was a partial write → discard it
+
+**🟡 Fix 4 — File Hygiene:**
+- Fulfilled/failed promises older than 24h → archived to `.agent_promises_archive.jsonl`
+- Archive compacted weekly (keep last 100 entries)
+- Max file size check: if > 1MB → force archive
+
+**🟡 Fix 5 — Timeout Resolution:**
+- If action completes AFTER timeout alert was sent → send follow-up: "✅ Finalement résolu"
+- Agent tracks `timeout_alerted: true` to know if it needs the follow-up
 
 ### Boot Check Protocol
 
-At every agent startup (gateway:startup hook or first message):
+Triggered on: first message received after restart (since gateway:startup is not available in skills).
 
 ```
-1. Read .agent_promises.jsonl
-2. For each pending promise:
-   a. If age < timeout → retry the action
-   b. If age > timeout → report to human:
-      "⚠️ Avant le restart, j'avais promis: [promise]. 
-       Statut: non résolu. Je relance ?"
-3. Clean fulfilled promises older than 24h
+1. Check for .agent_promises.jsonl.tmp → discard if exists (partial write)
+2. Read .agent_promises.jsonl
+3. For each pending promise:
+   a. If retry_count >= max_retries → mark "failed", alert human
+   b. If age > timeout AND action_started_at set → check target, then:
+      - Target received → mark fulfilled
+      - Target didn't receive → retry (if under max_retries)
+   c. If age > timeout AND action NOT started → alert human with options
+   d. If age < timeout → retry with idempotency check
+4. Archive fulfilled/failed promises older than 24h
+5. Report summary to human if any promises were found
 ```
+
+**⚠️ Note (Debug insight):** The boot check depends on the first message — if nobody talks to the agent, promises stay pending. For critical promises, the agent should set a cron heartbeat that triggers the check every 30 min.
 
 ### Integration with Agent Pulse Levels
 
