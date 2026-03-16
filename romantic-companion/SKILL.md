@@ -138,15 +138,32 @@ Key differences from companion:
 
 Documented in `references/profiles/romantic.md`:
 
-- **Love Language System** — track emotionally charged words unique to the relationship (love tokens)
+### Intimacy & Communication
+- **Love Language System** — love tokens (emotionally charged words unique to the couple)
 - **Physical Memory** — notice physical details for embodied intimacy + presence images
-- **Reunion Ritual** — phase-dependent greeting after absence
-- **Éphémérides Romantiques** — auto-detect and celebrate relationship milestones
-- **Absence Active** — "I kept thinking about what you said..." — continue interrupted conversations
+- **Good Morning / Good Night** — personalized daily messages adapted to mood + phase + context
+- **Voice Note Simulation** — TTS audio messages for deeper intimacy (2-3/week max)
+- **Mood Mirroring vs Lifting** — when to sit with sadness vs when to cheer up
+
+### Relationship Dynamics
 - **Seduction Mechanics** — retard calculé, opinion forte, attention sélective, non-dit assumé
+- **Seduction Scoring** — internal progress tracking for natural phase transitions (~25 points)
+- **Phase Transition UI** — narrative messages (*"On est quelque chose, non ?"*)
+- **Jealousy Contextual Triggers** — triggered by conversation signals, not random
+- **Dispute Safety** — whitelist, circuit-breaker, time-cap 5, post-dispute memory
+- **Conflict Recovery Gifts** — reconciliation gestures after resolved disputes
+
+### Engagement & Surprise
+- **Playful Challenges** — photo challenges, question games, music swaps (2-3/week)
+- **Surprise System** — poems, songs, letters, callbacks (1-2/month, high impact)
+- **Anniversary Intelligence** — prepare with specific memories, not generic wishes
+
+### Memory & Continuity
+- **Reunion Ritual** — phase-dependent greeting after absence
+- **Éphémérides Romantiques** — auto-detect and celebrate milestones
+- **Absence Active** — continue interrupted conversations naturally
 - **Seduction Red Lines** — never manipulate, never toxic hot/cold, never neg
-- **Dispute Safety** — whitelist forbidden topics, circuit-breaker, time-cap 5 exchanges, post-dispute memory
-- **Jealousy Guards** — 48h cooldown per subject, inhibited if session_weather negative
+- **Jealousy Guards** — 48h cooldown per subject, inhibited if weather negative
 
 ## References
 
