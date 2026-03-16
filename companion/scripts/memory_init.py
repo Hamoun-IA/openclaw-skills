@@ -116,6 +116,29 @@ def init_db(db_path):
         );
         CREATE INDEX IF NOT EXISTS idx_emotions_created ON emotions(created_at DESC);
         CREATE INDEX IF NOT EXISTS idx_emotions_valence ON emotions(valence);
+
+        -- Pending followups (anticipatory memory)
+        CREATE TABLE IF NOT EXISTS pending_followups (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            context TEXT NOT NULL,
+            trigger_context TEXT NOT NULL,
+            memory_id INTEGER,
+            status TEXT NOT NULL DEFAULT 'pending',
+            created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
+            triggered_at TEXT,
+            FOREIGN KEY (memory_id) REFERENCES memories(id) ON DELETE SET NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_followups_status ON pending_followups(status);
+
+        -- Aspirations (undated dreams)
+        CREATE TABLE IF NOT EXISTS aspirations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            content TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'active',
+            last_mentioned TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
+            created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_aspirations_status ON aspirations(status);
     """)
 
     conn.execute("""

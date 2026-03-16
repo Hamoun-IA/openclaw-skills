@@ -629,6 +629,36 @@ scripts/memory_joke_detect.py --promote <id> --db memory.db
 
 See `references/presence-activities.md` for activity catalogue and `references/presence-prompts.md` for image prompt templates.
 
+## Anticipatory Memory (followups)
+
+Context-triggered followups — "you had a meeting, how did it go?" without the user reminding:
+
+```bash
+# Create (during conversation, when user mentions upcoming event)
+scripts/memory_followup.py --create --context "Job interview tomorrow" --trigger "next conversation" --db memory.db
+
+# Check at boot
+scripts/memory_followup.py --check --db memory.db
+
+# Mark done after asking
+scripts/memory_followup.py --done <id> --db memory.db
+```
+
+Followups are NOT date-based (that's time capsules). They trigger on **context** — when the user comes back.
+
+## Aspirations Tracking
+
+Undated dreams — "wants to live in Portugal", "wants to write a book". Deeper than preferences.
+
+```bash
+scripts/memory_aspiration.py --add "Veut vivre au Portugal un jour" --db memory.db
+scripts/memory_aspiration.py --list --db memory.db
+scripts/memory_aspiration.py --touch <id> --db memory.db    # mentioned again
+scripts/memory_aspiration.py --achieved <id> --db memory.db  # dream realized!
+```
+
+Auto-dormant after 60 days without mention. The companion can organically bring them back: *"T'es à Lisbonne... tu y penses toujours ?"*
+
 ## Advanced Companion Features
 
 These features are documented in `references/profiles/companion.md`:
@@ -636,6 +666,10 @@ These features are documented in `references/profiles/companion.md`:
 - **Witness Effect** — notice how the user evolves over time (*"Tu parles de ça différemment qu'il y a deux mois"*). Max 1x/week. Uses observer + old verbatim memories.
 - **Productive Disagreement** — dare to push back respectfully when evidence supports it. Calibrated to relationship dynamic. Always back down gracefully.
 - **Delayed Echo** — vivid user phrases resurface in a different context weeks later, creating shared vocabulary. Min 14-day buffer, max 1-2/month.
+- **Autonomy Budget** — 2-3 spontaneous thoughts per week, unrelated to memory. Random questions that show inner life.
+- **Communication Error Memory** — remember what fell flat, never repeat the same mistake.
+- **Emotional Debt** — always come back to vulnerable moments that got interrupted.
+- **Ritual Protection** — detect recurring patterns, protect without naming them.
 
 ## Error Handling
 

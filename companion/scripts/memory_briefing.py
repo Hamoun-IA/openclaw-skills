@@ -37,10 +37,22 @@ def generate_briefing(db_path):
         try:
             last_dt = datetime.fromisoformat(latest_interaction["last"].replace("Z", "+00:00"))
             silence_days = (datetime.now(timezone.utc) - last_dt).days
-            if silence_days >= 7:
-                sections.append(f"## ⚠️ Long Silence Detected ({silence_days} days)")
-                sections.append("Enter listening mode. Do not assume where the conversation left off.")
-                sections.append("Ask how the user has been. Do not bombard with old context.")
+
+            if silence_days >= 30:
+                sections.append(f"## 🔄 New Chapter ({silence_days} days absence)")
+                sections.append("Treat as a new chapter. Full boot context. Warm reunion message.")
+                sections.append("Reference the last conversation briefly but don't dwell. *'Ça fait un moment ! Content de te revoir.'*")
+                sections.append("Enter `listen` mode regardless of reliability ratio.")
+                sections.append("")
+            elif silence_days >= 7:
+                sections.append(f"## ⚠️ Long Silence ({silence_days} days)")
+                sections.append("Acknowledge once, naturally, no guilt-trip. *'Ça fait un moment !'*")
+                sections.append("Enter `listen` mode. Do not bombard with old context.")
+                sections.append("")
+            elif silence_days >= 3:
+                sections.append(f"## 💬 Absence Noted ({silence_days} days)")
+                sections.append("Warmer than usual, but don't reference the absence explicitly.")
+                sections.append("Just be present and attentive.")
                 sections.append("")
         except (ValueError, TypeError):
             pass
@@ -165,7 +177,35 @@ def generate_briefing(db_path):
     except Exception:
         pass
 
-    # 9. Reliability indicator
+    # 9. Pending followups
+    try:
+        followups = conn.execute("""
+            SELECT id, context, trigger_context FROM pending_followups
+            WHERE status = 'pending' ORDER BY created_at DESC LIMIT 5
+        """).fetchall()
+        if followups:
+            sections.append("## 📌 Pending Followups")
+            for f in followups:
+                sections.append(f"- #{f['id']}: {f['context']} (trigger: {f['trigger_context']})")
+            sections.append("")
+    except sqlite3.OperationalError:
+        pass
+
+    # 10. Active aspirations
+    try:
+        aspirations = conn.execute("""
+            SELECT id, content FROM aspirations WHERE status = 'active'
+            ORDER BY last_mentioned DESC LIMIT 5
+        """).fetchall()
+        if aspirations:
+            sections.append("## ✨ Active Aspirations")
+            for a in aspirations:
+                sections.append(f"- #{a['id']}: {a['content']}")
+            sections.append("")
+    except sqlite3.OperationalError:
+        pass
+
+    # 11. Reliability indicator
     try:
         verbatim = conn.execute("""
             SELECT COUNT(DISTINCT m.id) FROM memories m

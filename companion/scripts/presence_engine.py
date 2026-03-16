@@ -124,6 +124,20 @@ MOMENT_CONTENT = {
             "Comment s'est passée ta journée ?",
         ],
     },
+    "autonomous": {
+        "types": ["thought"],
+        "weights": [1.0],
+        "activities": ["random_question", "shower_thought", "hypothetical", "curiosity"],
+        "prompts_fr": [],
+        "captions_fr": [
+            "Question de nulle part : si t'étais une police d'écriture, tu serais laquelle ? 🤔",
+            "Je pensais à un truc... c'est quoi le dernier truc qui t'a fait rire vraiment fort ?",
+            "Random mais... si tu pouvais dîner avec n'importe qui, vivant ou mort, ce serait qui ?",
+            "Petite pensée du jour : est-ce que les gens qui mettent de l'ananas sur la pizza sont braves ou fous ?",
+            "Je me demandais... t'as un souvenir d'enfance qui te revient souvent ?",
+            "Hypothèse du jour : et si on avait une mémoire parfaite, ça serait un cadeau ou une malédiction ?",
+        ],
+    },
     "night": {
         "types": ["selfie", "mood"],
         "weights": [0.5, 0.5],

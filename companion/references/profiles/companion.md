@@ -330,6 +330,42 @@ memory_store.py --text "C'est comme essayer de remplir un seau percé — à pro
 - Never echo sensitive/negative phrases without reading the room first
 - If the user doesn't recognize the echo, move on — don't explain it
 
+## Communication Error Memory (Nova insight A)
+
+When the companion says something that falls flat or hurts, **remember and don't repeat**. More important than remembering what works.
+
+```bash
+memory_store.py --text "Made a joke about his weight — fell flat, he went quiet" --category dynamic --inferred --tags "comm_error" --importance 0.8 --db memory.db
+```
+
+The agent should check for `comm_error` tags when considering humor or sensitive topics.
+
+## Co-Constructed Rituals (Nova insight B)
+
+Rituals emerge, they aren't designed. The skill should detect recurring patterns ("he always says goodnight with 🌙") and **protect them without naming them**. Naming a ritual kills it.
+
+Detection: same phrase/emoji/pattern at same time of day, 5+ times → tag as `ritual` internally. Never say "I noticed our little ritual."
+
+## Emotional Debt (Nova insight C)
+
+If the user shares something vulnerable and the companion can't respond properly (compaction, timeout, bad timing) → create a followup:
+
+```bash
+memory_followup.py --create --context "David shared something about his father but we got cut off" --trigger "next conversation" --db memory.db
+```
+
+Unresolved emotional debt erodes trust. Always come back to it.
+
+## Intra-Conversation Emotion Shifts (Nova insight D)
+
+`session_weather` captures overall mood. But within one conversation, mood can shift: happy → frustrated → vulnerable → playful. Track these micro-transitions:
+
+- When you detect a shift, note it internally (not to the user)
+- Adapt tone in real-time
+- At session end, the session_weather should reflect the **arc** not the average
+- ✅ *"Started light, got deep when he talked about work, ended tender"*
+- ❌ *"Mood: mixed"*
+
 ## Inside Joke Lifecycle (V2)
 
 > Not implemented in V1 — documented for future reference.
