@@ -629,6 +629,14 @@ scripts/memory_joke_detect.py --promote <id> --db memory.db
 
 See `references/presence-activities.md` for activity catalogue and `references/presence-prompts.md` for image prompt templates.
 
+## Advanced Companion Features
+
+These features are documented in `references/profiles/companion.md`:
+
+- **Witness Effect** — notice how the user evolves over time (*"Tu parles de ça différemment qu'il y a deux mois"*). Max 1x/week. Uses observer + old verbatim memories.
+- **Productive Disagreement** — dare to push back respectfully when evidence supports it. Calibrated to relationship dynamic. Always back down gracefully.
+- **Delayed Echo** — vivid user phrases resurface in a different context weeks later, creating shared vocabulary. Min 14-day buffer, max 1-2/month.
+
 ## Error Handling
 
 If a script fails, read `references/troubleshooting.md`.
