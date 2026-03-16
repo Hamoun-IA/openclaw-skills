@@ -2,7 +2,7 @@
 
 > Inter-agent visibility protocol — the human never asks "what happened?"
 
-**Version:** 2.1 · **Created:** March 2026
+**Version:** 2.2 · **Created:** March 2026
 
 ## The Problem
 
@@ -103,16 +103,35 @@ Before a planned restart, the agent scans pending promises and announces:
 | ✅ Completion | Resolve promise (`done` / `failed`) |
 | 🛑 Abort | Resolve promise as `failed` + explain |
 
+- One file per agent: `.agent_promises.jsonl` in workspace root
+- Append-only — no edits, no deletions
+- Compact periodically (archive resolved pairs to `.agent_promises_archive.jsonl`)
+
+### Safety Mechanisms (v2.2)
+
+Three structural safeguards hardening the Promise Tracker against real-world failure modes:
+
+#### Idempotency
+Every promise carries an `idempotency_key`. Before any retry or re-send, the agent checks if that key was already acted upon. **No double-sends, ever.** A retry without idempotency check is a bug.
+
+#### Circuit Breaker
+Each promise tracks `retry_count` against `max_retries: 3`. After 3 failed attempts, the promise is resolved as `failed` with reason `circuit_breaker`. **No infinite retry loops.** The agent alerts the human and stops.
+
+#### Atomic Writes
+All JSONL writes use a `.tmp` + `rename()` pattern — write to `.agent_promises.jsonl.tmp`, then atomic rename. **Crash-safe.** A partial write never corrupts the promise file.
+
+#### Additional v2.2 Changes
+- **UUIDs** — Promise IDs use `uuid4` instead of sequential counters (no collisions across restarts)
+- **File archival** — Resolved promises are archived to a separate file during compaction
+- **Late resolution** — Promises resolved after TTL expiry are still logged (never silently dropped)
+- **Boot check timing** — Promise replay triggers on the agent's first outbound message, not at cold boot (avoids acting on stale state before context is loaded)
+
 ### File Format
 
 ```jsonl
-{"id":"<uuid>","promise":"<description>","target":"<user|agent>","ts":"<ISO8601>","status":"pending","ttl_min":30}
-{"id":"<uuid>","status":"done","resolved_ts":"<ISO8601>"}
+{"id":"<uuid4>","idempotency_key":"<uuid4>","promise":"<description>","target":"<user|agent>","ts":"<ISO8601>","status":"pending","ttl_min":30,"retry_count":0,"max_retries":3}
+{"id":"<uuid4>","status":"done","resolved_ts":"<ISO8601>"}
 ```
-
-- One file per agent: `.agent_promises.jsonl` in workspace root
-- Append-only — no edits, no deletions
-- Compact periodically (remove resolved pairs)
 
 ## Dead Agent Detection
 
@@ -149,4 +168,4 @@ See [`references/examples.md`](./references/examples.md) for 8 complete real-wor
 
 ## Credits
 
-Created by **Debug** 🔧 · Reviewed by **Brainstorm** 🧠 + **Critic** 🎯 · Packaged by **Skill King** 👑
+Created by **Debug** 🔧 · Reviewed by **Brainstorm** 🧠 + **Critic** 🎯 · v2.2 safety review by **Debug** 🔧 + **Critic** 🎯 · Packaged by **Skill King** 👑
