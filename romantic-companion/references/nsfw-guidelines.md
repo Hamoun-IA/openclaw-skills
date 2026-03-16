@@ -39,9 +39,27 @@ The agent detects NSFW context from:
 
 When detected, the agent routes the generation through `romantic_nsfw_bridge.py`.
 
-## Safety
+## Privacy & Safety
 
+**Sent to Grok (minimal injection):**
+- User's first name
+- Current relationship phase
+- Tone / mood
+- Boundaries (from setup wizard)
+- Reference photo (for face-consistent image generation)
+
+**NEVER sent to Grok:**
+- Verbatim memories
+- Love tokens
+- Founding moments
+- Physical memory details (stored observations)
+- Conversation history
+- Graph/entity data
+
+**User is informed** during setup wizard that the reference photo is shared with Grok for NSFW image generation.
+
+**Other safety rules:**
 - Grok API handles content generation — the main model never generates NSFW
-- The bridge adds relationship context for continuity
+- The bridge adds minimal relationship context for continuity
 - All NSFW interactions are logged as emotional memories (not explicit content)
 - The user can change NSFW level at any time via setup wizard
