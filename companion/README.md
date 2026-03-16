@@ -2,7 +2,7 @@
 
 > Your AI friend that remembers, feels, and lives. Complete companion system — persistent memory, emotional intelligence, and living presence in one skill.
 
-**Version:** 3.4 · **Created:** March 2026
+**Version:** 3.8 · **Created:** March 2026
 
 ## What makes it different
 
@@ -79,16 +79,65 @@ Automatically detected when a phrase/situation repeats 3+ times with positive re
 ### Founding Moments
 Sacred memories that never expire. The agent proposes: *"Ce moment compte, non ?"* — the user confirms.
 
-## All Scripts (27)
+## All Scripts (33)
 
 | Category | Scripts |
 |----------|---------|
 | **Core Memory** | `memory_init`, `memory_store`, `memory_recall`, `memory_forget`, `memory_consolidate`, `memory_dump`, `memory_import` |
-| **Graph** | `memory_graph_update`, `memory_graph_query` |
+| **Graph** | `memory_graph_update`, `memory_graph_query`, `memory_graph_resolve` |
 | **Emotions** | `memory_emotion`, `memory_consciousness`, `memory_observer`, `memory_relationship`, `memory_briefing`, `memory_current` |
 | **Presence** | `presence_engine`, `presence_generate`, `presence_reactivity` |
 | **Detection** | `memory_contradict`, `memory_bridge`, `memory_joke_detect` |
+| **Anticipatory** | `memory_followup`, `memory_aspiration` |
+| **Ops** | `memory_healthcheck`, `memory_reliability` |
 | **Lifecycle** | `memory_threads`, `memory_capsule`, `memory_session_summary`, `memory_setup_crons`, `setup_wizard` |
+| **Tests** | `test_critical` (13 offline tests) |
+
+## Feature Gates
+
+Behavior adapts based on memory reliability (verbatim vs. inferred ratio):
+
+| Mode | Trigger | Behavior |
+|------|---------|----------|
+| 🟢 `normal` | High reliability | Full features — references, followups, anticipation |
+| 🟡 `exploratory` | Medium reliability | Softer references ("il me semble que..."), no assertions |
+| 🔴 `listen` | Low reliability / new user | Listen-only — no memory references, pure presence |
+
+## Anticipatory Memory
+
+Context-triggered followups — not date-based. When a stored memory matches the current conversation context, the companion naturally follows up.
+
+- `memory_followup.py` — scans active memories for contextual relevance
+- Triggered by topic proximity, not calendar reminders
+- Example: user mentioned job interview stress → companion asks how it went when work topic resurfaces
+
+## Aspirations Tracking
+
+Tracks undated dreams and life goals ("veut vivre au Portugal", "apprendre le piano").
+
+- `memory_aspiration.py` — stores, retrieves, and manages aspirations
+- Auto-dormant after 60 days without mention
+- Resurface naturally when context aligns
+
+## Health & Reliability
+
+- `memory_healthcheck.py` — full system check (DB integrity, sqlite-vec status, cron health, entity backlog)
+- `memory_reliability.py` — computes verbatim/inferred ratio → sets feature gate mode
+- `memory_graph_resolve.py` — entity resolution (merge ambiguous/duplicate entities)
+
+## Advanced Companion Features (v3.5–3.8)
+
+| Feature | Description |
+|---------|-------------|
+| **Witness Effect** | Simply acknowledging what the user lives — no advice, no fix, just "I see you" |
+| **Productive Disagreement** | Companion can respectfully disagree when it matters — not a yes-machine |
+| **Delayed Echo** | References something said days/weeks ago at the perfect moment |
+| **Autonomy Budget** | Spontaneous thoughts 2-3x/week — not reactive, genuinely initiated |
+| **Memory of Absence** | Gradual protocol: 3d → gentle check-in, 7d → warmer, 30d → "je suis là" |
+| **Communication Error Memory** | Remembers misunderstandings to avoid repeating them |
+| **Emotional Debt** | Tracks unresolved emotional moments to revisit later |
+| **Ritual Protection** | Preserves recurring meaningful patterns (morning coffee chat, etc.) |
+| **Conflict Signature** | Learns how the user handles conflict → adapts approach |
 
 ## Design Principles
 

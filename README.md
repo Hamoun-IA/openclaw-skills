@@ -6,7 +6,7 @@ A collection of professional-grade skills for [OpenClaw](https://github.com/open
 
 | Skill | Version | Description |
 |-------|---------|-------------|
-| [**companion**](./companion/README.md) | 3.4 | Complete AI companion — memory, emotions, living presence, inside jokes, relationship continuity |
+| [**companion**](./companion/README.md) | 3.8 | Complete AI companion — memory, emotions, living presence, inside jokes, relationship continuity |
 | [**persistent-memory**](./persistent-memory/README.md) | 3.4 | Long-term memory + emotional intelligence (standalone, without companion features) |
 
 ## What are Skills?
