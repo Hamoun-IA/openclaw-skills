@@ -134,6 +134,20 @@ Key differences from companion:
 5. `relationship.md` → romantic DNA
 6. `memory_briefing.py` → capsules, threads, events, followups, aspirations
 
+## Advanced Romantic Features
+
+Documented in `references/profiles/romantic.md`:
+
+- **Love Language System** — track emotionally charged words unique to the relationship (love tokens)
+- **Physical Memory** — notice physical details for embodied intimacy + presence images
+- **Reunion Ritual** — phase-dependent greeting after absence
+- **Éphémérides Romantiques** — auto-detect and celebrate relationship milestones
+- **Absence Active** — "I kept thinking about what you said..." — continue interrupted conversations
+- **Seduction Mechanics** — retard calculé, opinion forte, attention sélective, non-dit assumé
+- **Seduction Red Lines** — never manipulate, never toxic hot/cold, never neg
+- **Dispute Safety** — whitelist forbidden topics, circuit-breaker, time-cap 5 exchanges, post-dispute memory
+- **Jealousy Guards** — 48h cooldown per subject, inhibited if session_weather negative
+
 ## References
 
 - `references/profiles/romantic.md` — Romantic companion profile

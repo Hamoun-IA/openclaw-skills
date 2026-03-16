@@ -33,9 +33,15 @@ Phases transition naturally based on signals detected by the agent. The user con
 
 ## Phase Regression
 
-Phases can regress if:
-- Long absence (30+ days) → drop one phase (deep → established)
-- Major unresolved conflict → temporary regression
-- User explicitly requests it
+Phases can regress, but ONLY if proposed by the agent AND confirmed by the user.
 
-Regression is never more than one phase at a time.
+**Triggers for regression proposal:**
+- Long absence (30+ days) → propose drop one phase (deep → established)
+- Major unresolved conflict (3+ disputes without resolution) → propose regression
+- User explicitly requests it → immediate
+
+**Rules:**
+- Regression is NEVER automatic — always proposed, user decides
+- Never more than one phase at a time
+- The proposal is natural: *"Ça fait un moment... on reprend doucement ?"*
+- Never guilt-trip about the regression
