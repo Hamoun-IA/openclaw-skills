@@ -25,7 +25,7 @@ import argparse
 import json
 import sqlite3
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 def create_followup(db_path, context, trigger_context, memory_id=None):
     conn = sqlite3.connect(db_path, timeout=10)
@@ -43,6 +43,16 @@ def create_followup(db_path, context, trigger_context, memory_id=None):
 def check_pending(db_path):
     conn = sqlite3.connect(db_path, timeout=10)
     conn.row_factory = sqlite3.Row
+
+    # Auto-expire followups older than 14 days
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=14)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    expired = conn.execute(
+        "UPDATE pending_followups SET status = 'expired' WHERE status = 'pending' AND created_at < ?",
+        (cutoff,)
+    )
+    if expired.rowcount > 0:
+        conn.commit()
+        print(f"💤 {expired.rowcount} followup(s) expired (>14 days old)\n")
 
     followups = conn.execute("""
         SELECT f.*, m.content as memory_content

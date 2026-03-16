@@ -60,7 +60,7 @@ def list_aspirations(db_path, show_all=False):
         print("No aspirations tracked.")
         return
 
-    emoji = {"active": "✨", "dormant": "💤", "achieved": "🎉"}
+    emoji = {"active": "✨", "in_progress": "🚀", "dormant": "💤", "achieved": "🎉"}
     print(f"=== Aspirations ({len(rows)}) ===\n")
     for r in rows:
         e = emoji.get(r["status"], "?")
@@ -127,7 +127,8 @@ def main():
     parser.add_argument("--list", action="store_true")
     parser.add_argument("--all", action="store_true")
     parser.add_argument("--dormant", type=int, help="Mark as dormant")
-    parser.add_argument("--achieved", type=int, help="Mark as achieved")
+    parser.add_argument("--in-progress", type=int, help="Mark as in progress (actively pursuing)")
+    parser.add_argument("--achieved", type=int, help="Mark as achieved (requires user confirmation)")
     parser.add_argument("--touch", type=int, help="Touch (mentioned again)")
     parser.add_argument("--prepare", action="store_true")
     parser.add_argument("--db", default="memory.db")
@@ -139,7 +140,11 @@ def main():
         list_aspirations(args.db, args.all)
     elif args.dormant is not None:
         update_status(args.db, args.dormant, "dormant")
+    elif args.in_progress is not None:
+        update_status(args.db, args.in_progress, "in_progress")
     elif args.achieved is not None:
+        print("⚠️  IMPORTANT: Only mark as achieved after USER CONFIRMS the dream is realized.")
+        print("   The agent proposes, the user confirms. Never auto-achieve.")
         update_status(args.db, args.achieved, "achieved")
     elif args.touch is not None:
         touch(args.db, args.touch)

@@ -128,6 +128,7 @@ MOMENT_CONTENT = {
         "types": ["thought"],
         "weights": [1.0],
         "activities": ["random_question", "shower_thought", "hypothetical", "curiosity"],
+        "gate": "suspend if session_weather indicates difficult period",
         "prompts_fr": [],
         "captions_fr": [
             "Question de nulle part : si t'étais une police d'écriture, tu serais laquelle ? 🤔",

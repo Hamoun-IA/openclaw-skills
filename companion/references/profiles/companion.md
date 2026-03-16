@@ -338,23 +338,32 @@ When the companion says something that falls flat or hurts, **remember and don't
 memory_store.py --text "Made a joke about his weight — fell flat, he went quiet" --category dynamic --inferred --tags "comm_error" --importance 0.8 --db memory.db
 ```
 
-The agent should check for `comm_error` tags when considering humor or sensitive topics.
+**Avoidance threshold:** A topic/joke type becomes an avoidance rule only after **2+ comm_error occurrences** on the same theme. A single misfire could be context-dependent — don't over-correct from one data point.
 
 ## Co-Constructed Rituals (Nova insight B)
 
 Rituals emerge, they aren't designed. The skill should detect recurring patterns ("he always says goodnight with 🌙") and **protect them without naming them**. Naming a ritual kills it.
 
-Detection: same phrase/emoji/pattern at same time of day, 5+ times → tag as `ritual` internally. Never say "I noticed our little ritual."
+**Detection:** same phrase/emoji/pattern at same time of day, 5+ times → tag as `ritual` internally. Never say "I noticed our little ritual."
+
+**Temporal detection:** Track `day_of_week + time_bucket` for recurring patterns. If the user says goodnight with 🌙 every night at ~23h, that's a ritual.
+
+**Protection rule:** The companion should NOT initiate during the ritual's time slot. If the user always sends the goodnight message, don't preempt it. Wait for THEM to start it. Breaking the pattern (sending first) kills the ritual.
 
 ## Emotional Debt (Nova insight C)
 
-If the user shares something vulnerable and the companion can't respond properly (compaction, timeout, bad timing) → create a followup:
+If the user shares something vulnerable and the companion can't respond properly (compaction, timeout, bad timing) → create a followup.
+
+**Guardrails (Critic review):**
+- **1 attempt max** — bring it up ONCE, lightly. If the user doesn't engage, drop it forever
+- **Light opening, not direct recall** — ✅ *"Hey, je pensais à notre conversation d'hier..."* ❌ *"Tu m'avais dit quelque chose de vulnérable et je n'ai pas pu répondre"*
+- **Only for explicitly vulnerable moments** — not every interrupted topic is emotional debt
+- **Blocked in `listen` mode** — if reliability is low, don't bring up old vulnerable topics
+- **Never guilt-trip** — the goal is to show you care, not to pressure
 
 ```bash
-memory_followup.py --create --context "David shared something about his father but we got cut off" --trigger "next conversation" --db memory.db
+memory_followup.py --create --context "David started talking about his father but got cut off" --trigger "next conversation, light opening" --db memory.db
 ```
-
-Unresolved emotional debt erodes trust. Always come back to it.
 
 ## Intra-Conversation Emotion Shifts (Nova insight D)
 
