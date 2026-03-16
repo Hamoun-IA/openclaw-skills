@@ -239,6 +239,21 @@ If the user EVOLVED (changed their mind, not a correction):
 - Same flow but tag with `evolved` instead of `user_corrected`
 - The old memory wasn't wrong — just outdated
 
+## Feature Gates (Reliability-Dependent)
+
+Advanced features are gated by the reliability policy:
+
+| Feature | `listen` (<40%) | `exploratory` (40-70%) | `normal` (>70%) |
+|---------|----------------|----------------------|----------------|
+| Witness Effect | ❌ Blocked | ⚠️ Only with [verbatim] | ✅ Full |
+| Productive Disagreement | ❌ Blocked | ⚠️ Gentle only | ✅ Full |
+| Delayed Echo | ❌ Blocked | ⚠️ Only [verbatim] echoes | ✅ Full |
+| Inside Joke Detection | ❌ Blocked | ✅ Active | ✅ Active |
+| Founding Moment Proposals | ❌ Blocked | ✅ Active | ✅ Active |
+| Reactivity Scale | ✅ Active (basic) | ✅ Active | ✅ Active |
+
+**Witness Effect extra gate:** blocked if Observer agent hasn't run successfully in 14+ days (stale data = dangerous evolution claims).
+
 ## The Witness Effect (Evolution Tracking)
 
 The rarest thing in a relationship: someone who notices how you've changed without you telling them.
