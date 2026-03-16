@@ -2,7 +2,7 @@
 
 > Inter-agent visibility protocol — the human never asks "what happened?"
 
-**Version:** 2 · **Created:** March 2026
+**Version:** 2.1 · **Created:** March 2026
 
 ## The Problem
 
@@ -67,6 +67,52 @@ Five patterns for every multi-agent scenario:
 | 🫡 | Forwarded to another agent |
 | 🔥 | Urgent / problem detected |
 | 🛑 | Aborted / can't complete |
+
+## Promise Tracker (Restart Survival)
+
+**Problem:** An agent says "I'll get back to you" → restarts → forgets everything → eternal silence.
+
+**Solution:** Every promise is logged to `.agent_promises.jsonl` BEFORE the action. On boot, the agent replays unresolved promises.
+
+### How It Works
+
+1. **Log before act** — Before any async commitment, append to `.agent_promises.jsonl`:
+   ```json
+   {"id":"abc123","promise":"deploy skill on nova","target":"user","ts":"2026-03-16T23:00:00Z","status":"pending"}
+   ```
+2. **Boot check** — On startup, read `.agent_promises.jsonl` and filter `status: pending`:
+   - If resumable → **re-execute** the promise
+   - If stale (>configured timeout) → **alert the user**: "I promised X but couldn't complete it"
+3. **Resolve** — On completion, append a resolution entry (`status: done` or `status: failed`)
+
+### Timeout Detection
+
+Promises older than their configured TTL trigger an alert at next boot or heartbeat cycle. Default TTL: 30 minutes.
+
+### Restart Announcement
+
+Before a planned restart, the agent scans pending promises and announces:
+> ⚠️ Restarting — 2 tasks in flight: [deploy skill on nova], [update README]. Will resume on boot.
+
+### Integration with Pulse Levels
+
+| Level | Promise Tracker Role |
+|-------|---------------------|
+| 🚀 Departure | Log promise before delegation |
+| ⏳ Heartbeat | Check for overdue promises |
+| ✅ Completion | Resolve promise (`done` / `failed`) |
+| 🛑 Abort | Resolve promise as `failed` + explain |
+
+### File Format
+
+```jsonl
+{"id":"<uuid>","promise":"<description>","target":"<user|agent>","ts":"<ISO8601>","status":"pending","ttl_min":30}
+{"id":"<uuid>","status":"done","resolved_ts":"<ISO8601>"}
+```
+
+- One file per agent: `.agent_promises.jsonl` in workspace root
+- Append-only — no edits, no deletions
+- Compact periodically (remove resolved pairs)
 
 ## Dead Agent Detection
 
