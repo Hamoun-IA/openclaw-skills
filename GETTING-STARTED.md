@@ -76,10 +76,19 @@ cd openclaw-skills
 cp -r companion ~/.openclaw/skills/
 ```
 
-**For romantic-companion:**
+**For romantic-companion (⚠️ requires a dedicated agent!):**
 ```bash
-cp -r romantic-companion ~/.openclaw/skills/
+# Create a separate agent first — DO NOT install on your main agent
+openclaw agents create romantic
+
+# Install the skill in the new agent's workspace
+cp -r romantic-companion ~/.openclaw/agents/romantic/workspace/skills/
+
+# Run the wizard from the agent's workspace
+cd ~/.openclaw/agents/romantic/workspace/
+python3 skills/romantic-companion/scripts/setup_wizard.py
 ```
+> **Why?** The romantic companion has its own personality, memory, and presence. Mixing it with your main agent would cause romantic behavior in work conversations.
 
 **For persistent-memory only:**
 ```bash

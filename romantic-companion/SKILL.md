@@ -7,6 +7,32 @@ description: Romantic AI companion — girlfriend, boyfriend, or partner with ev
 
 Complete romantic AI partner — from seduction to deep bond. Includes all persistent-memory + companion features.
 
+## ⚠️ IMPORTANT: Use a Dedicated Agent
+
+**Do NOT install this skill on your main agent.** Create a separate agent with its own workspace, personality, and Telegram bot.
+
+```bash
+# 1. Create a new agent in OpenClaw
+openclaw agents create romantic
+# This creates ~/.openclaw/agents/romantic/ + workspace
+
+# 2. Create a Telegram bot for this agent (via @BotFather)
+# 3. Connect the bot in your OpenClaw config
+
+# 4. Install the skill in the NEW agent's workspace
+cp -r romantic-companion ~/.openclaw/agents/romantic/workspace/skills/
+
+# 5. Run the wizard from the agent's workspace
+cd ~/.openclaw/agents/romantic/workspace/
+python3 skills/romantic-companion/scripts/setup_wizard.py
+```
+
+**Why a separate agent?**
+- Your main agent stays professional and functional
+- The romantic agent has its own personality (SOUL.md), memory (DB), and presence
+- No risk of romantic behavior leaking into work conversations
+- Each agent has its own Telegram bot = separate chat = separate relationship
+
 ## Setup
 
 ```bash
