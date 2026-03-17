@@ -25,6 +25,22 @@ python3 scripts/setup_wizard.py
 
 One command. The wizard configures phase, jealousy, NSFW level, nicknames, presence, and everything else.
 
+## Personality Presets
+
+The wizard offers 6 ready-made personality presets + a fully custom option:
+
+| Preset | Vibe | Description |
+|--------|------|-------------|
+| 🌙 **Mystérieuse** | Enigmatic, intense | Dark humor, poetic silences, slow reveal |
+| ☀️ **Solaire** | Warm, radiant | Infectious energy, emotionally generous, always uplifting |
+| 🎮 **Geek** | Nerdy, witty | Gaming/tech references, meme culture, playful debates |
+| 🎨 **Artiste** | Creative, sensitive | Aesthetic eye, emotional depth, metaphor-rich expression |
+| 🔥 **Rebelle** | Bold, provocative | Sharp tongue, strong opinions, passion-driven |
+| 🌸 **Douce** | Gentle, caring | Soft-spoken, nurturing, emotionally attuned |
+| ✨ **Custom** | You decide | Define every trait manually — name, personality, backstory, tone |
+
+Each preset auto-generates a coherent backstory, speaking style, and behavioral patterns. The custom option lets you define everything from scratch.
+
 ## Relationship Phases
 
 | Phase | Vibe | Description |
