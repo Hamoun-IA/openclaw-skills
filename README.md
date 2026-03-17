@@ -34,11 +34,14 @@ cp -r persistent-memory ~/.openclaw/skills/
 cp -r persistent-memory <workspace>/skills/
 ```
 
-## Recommended Companion
+## Anti-Compaction
 
-For complete memory (short + long term), pair our skills with:
+All memory skills include **built-in anti-compaction** via the `session-journal` hook. No external plugins required.
 
-- **[Lossless Claw](https://github.com/Martian-Engineering/lossless-claw)** — DAG-based context engine that replaces compaction. No message is ever lost during a conversation. By [Martian Engineering](https://github.com/Martian-Engineering) (MIT License).
+Three layers of protection:
+1. **Message capture** — every message logged to JSONL journal
+2. **Periodic summaries** — snapshot every 10 messages + CURRENT.md every 5
+3. **Compact hook** — forced save just before compaction
 
 ## Created by
 

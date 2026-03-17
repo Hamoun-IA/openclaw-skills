@@ -147,16 +147,14 @@ This shows you how to configure 4 automated agents:
 | 🧠 Memory | 7:00 AM | Generates consciousness stream |
 | 👁️ Observer | Sunday 11:00 | Weekly patterns analysis |
 
-## Step 6 — Install Anti-Compaction Hook (Optional)
+## Step 6 — Install Anti-Compaction Hook
 
-If you DON'T have [Lossless Claw](https://github.com/Martian-Engineering/lossless-claw) installed:
+The `session-journal` hook protects your agent's memory from compaction (3 layers: message capture, periodic summaries, compact:before save).
 
 ```bash
 cp -r ~/.openclaw/skills/companion/hooks/session-journal ~/.openclaw/hooks/
 openclaw hooks enable session-journal
 ```
-
-If you DO have Lossless Claw → skip this step, it handles everything.
 
 ## Step 7 — Restart OpenClaw
 

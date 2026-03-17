@@ -139,6 +139,14 @@ Tracks undated dreams and life goals ("veut vivre au Portugal", "apprendre le pi
 | **Ritual Protection** | Preserves recurring meaningful patterns (morning coffee chat, etc.) |
 | **Conflict Signature** | Learns how the user handles conflict → adapts approach |
 
+## Built-in Anti-Compaction
+
+No external plugin needed. The `session-journal` hook provides 3-layer protection:
+
+1. **Message capture** — every message → JSONL journal
+2. **Periodic summaries** — snapshot every 10 msgs + CURRENT.md every 5
+3. **Compact hook** — `compact:before` → forced save before compaction
+
 ## Design Principles
 
 - **Write > Think** — Files survive, context doesn't

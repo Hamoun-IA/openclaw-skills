@@ -13,7 +13,7 @@ Gives any OpenClaw agent a **real memory** that persists across sessions — fac
 | Problem | Solution |
 |---------|----------|
 | Agent forgets between sessions | Semantic memory + vector search |
-| Agent loses context after compaction | Session journal hook + external summarization |
+| Agent loses context after compaction | Built-in 3-layer anti-compaction (session-journal hook) |
 | Agent can't connect facts together | Knowledge graph (GraphRAG) |
 | Agent has no emotional continuity | Consciousness stream + emotional boot |
 | Agent doesn't feel "alive" | Living presence (proactive selfies & messages) |
@@ -51,27 +51,27 @@ python3 scripts/memory_init.py --db memory.db
 # 4. Set up automated agents
 python3 scripts/memory_setup_crons.py --timezone Europe/Brussels
 
-# 5. (Optional) Install anti-compaction hook
+# 5. Install anti-compaction hook
 cp -r hooks/session-journal ~/.openclaw/hooks/
 openclaw hooks enable session-journal
 ```
 
-## Works with Lossless Claw
+## Built-in Anti-Compaction
 
-For the best experience, pair this skill with [Lossless Claw (LCM)](https://github.com/Martian-Engineering/lossless-claw) — a plugin that replaces OpenClaw's compaction with a DAG-based system where **no message is ever lost**.
+The `session-journal` hook provides complete anti-compaction protection — no external plugin needed.
 
-| Layer | Tool | What it handles |
-|-------|------|----------------|
-| **Short-term** (intra-session) | Lossless Claw | Context continuity during conversation |
-| **Long-term** (cross-session) | persistent-memory | Memory, emotions, identity between sessions |
+| Layer | What it does |
+|-------|-------------|
+| **1. Message capture** | Every message logged to JSONL journal in real-time |
+| **2. Periodic summaries** | Markdown snapshot every 10 messages + CURRENT.md refresh every 5 |
+| **3. Compact hook** | `compact:before` triggers forced save just before compaction |
 
 ```bash
-openclaw plugins install @martian-engineering/lossless-claw
+cp -r hooks/session-journal ~/.openclaw/hooks/
+openclaw hooks enable session-journal
 ```
 
-Without LCM, the skill's built-in hook + refresh agent handles intra-session continuity as a fallback.
-
-> *Lossless Claw by [Martian Engineering](https://github.com/Martian-Engineering) — MIT License*
+All three layers work together so no context is lost during or between sessions.
 
 ## Architecture
 

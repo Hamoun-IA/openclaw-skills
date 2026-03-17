@@ -229,6 +229,14 @@ When a conversation is interrupted mid-flow, the agent bookmarks context and res
 | 🦋 **Phase Transition UI** | Phase changes delivered as narrative moments ("something shifted between us..."), not system notifications |
 | 💘 **Seduction Scoring** | Internal ~25-point scoring system tracking relationship progression. Ensures phase transitions feel earned and natural |
 
+## Built-in Anti-Compaction
+
+No external plugin needed. The `session-journal` hook provides 3-layer protection:
+
+1. **Message capture** — every message → JSONL journal
+2. **Periodic summaries** — snapshot every 10 msgs + CURRENT.md every 5
+3. **Compact hook** — `compact:before` → forced save before compaction
+
 ## Design Principles
 
 Inherits all companion principles, plus:
