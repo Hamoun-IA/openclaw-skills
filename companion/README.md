@@ -19,10 +19,19 @@ This isn't a chatbot. It's a companion that:
 ## Quick Start
 
 ```bash
-python3 scripts/setup_wizard.py
+# From the repo root — one command does everything:
+python3 install.py companion
 ```
 
-Done. The wizard handles API keys, timezone, presence settings, database, everything.
+The installer creates a dedicated agent, configures Telegram, installs dependencies, copies the skill, sets up the hook, and runs the setup wizard automatically.
+
+<details>
+<summary>Already installed manually? Run the wizard directly</summary>
+
+```bash
+python3 scripts/setup_wizard.py
+```
+</details>
 
 ## Living Presence
 

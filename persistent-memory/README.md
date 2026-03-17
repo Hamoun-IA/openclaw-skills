@@ -21,6 +21,17 @@ Gives any OpenClaw agent a **real memory** that persists across sessions — fac
 
 ## Quick Start
 
+### Option A — Universal Installer (recommended)
+
+```bash
+# From the repo root:
+python3 install.py persistent-memory
+```
+
+Handles dependencies, skill copy, hook setup, and DB init automatically.
+
+### Option B — Manual
+
 ```bash
 # 1. Install the skill
 cp -r persistent-memory ~/.openclaw/skills/

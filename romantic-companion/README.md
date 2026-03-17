@@ -29,10 +29,21 @@ A full romantic partner that evolves with you:
 ## Quick Start
 
 ```bash
+# From the repo root — one command does everything:
+python3 install.py romantic-companion
+```
+
+The installer creates a dedicated `romantic` agent, configures Telegram, installs dependencies, copies the skill, sets up the hook, and runs the setup wizard automatically.
+
+<details>
+<summary>Already installed manually? Run the wizard directly</summary>
+
+```bash
 python3 scripts/setup_wizard.py
 ```
 
-One command. The wizard configures phase, jealousy, NSFW level, nicknames, presence, and everything else.
+The wizard configures phase, jealousy, NSFW level, nicknames, presence, and everything else.
+</details>
 
 ## Personality Presets
 

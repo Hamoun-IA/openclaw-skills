@@ -2,6 +2,34 @@
 
 A collection of professional-grade skills for [OpenClaw](https://github.com/openclaw/openclaw) agents.
 
+## 🚀 Installation
+
+One command to install any skill — the universal installer handles everything:
+
+```bash
+git clone https://github.com/Hamoun-IA/openclaw-skills.git
+cd openclaw-skills
+python3 install.py <skill-name>
+```
+
+The installer automatically:
+- Detects your OpenClaw installation
+- Creates a dedicated agent (for companion/romantic skills)
+- Guides you through Telegram bot setup (@BotFather)
+- Installs Python dependencies
+- Copies the skill to the right location
+- Installs and activates the session-journal hook
+- Configures the agent's Telegram channel
+- Runs the setup wizard
+- Initializes the database
+
+```bash
+# See available skills
+python3 install.py --list
+```
+
+> **Already have OpenClaw set up?** You can still use the [manual installation](#manual-installation) method below.
+
 ## Skills
 
 | Skill | Version | Description |
@@ -24,7 +52,7 @@ Skills are modular capabilities you can add to any OpenClaw agent. Each skill is
 - `references/` — Supplementary docs loaded on demand
 - `hooks/` — Optional automation hooks (if applicable)
 
-## Installation
+## Manual Installation
 
 ```bash
 # Install a skill globally
