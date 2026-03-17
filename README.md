@@ -7,7 +7,7 @@ A collection of professional-grade skills for [OpenClaw](https://github.com/open
 | Skill | Version | Description |
 |-------|---------|-------------|
 | [**companion**](./companion/README.md) | 3.9 | Complete AI companion — memory, emotions, living presence, inside jokes, relationship continuity |
-| [**persistent-memory**](./persistent-memory/README.md) | 3.4 | Long-term memory + emotional intelligence (standalone, without companion features) |
+| [**persistent-memory**](./persistent-memory/README.md) | 3.9 | Long-term memory + emotional intelligence (standalone, no presence) |
 | [**romantic-companion**](./romantic-companion/README.md) | 1.5 | Romantic AI partner — seduction to deep bond, virtual dates, NSFW via Grok ⚠️ _dedicated agent required_ |
 | [**agent-pulse**](./agent-pulse/README.md) | 2.2 | Inter-agent visibility protocol — departure signals, heartbeat, completion reports, escalation, promise tracker |
 

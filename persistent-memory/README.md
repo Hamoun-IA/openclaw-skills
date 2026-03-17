@@ -2,9 +2,9 @@
 
 > Long-term memory + emotional intelligence for OpenClaw agents. SQLite, sqlite-vec, and GraphRAG.
 
-**Version:** 3.4 · **Created:** March 2026
+**Version:** 3.9 · **Created:** March 2026
 
-> **Want the full companion experience?** Use the [companion](../companion/) skill instead — it includes everything here PLUS living presence (selfies, proactive messages, inside jokes).
+> **Want living presence (selfies, proactive messages, inside jokes)?** Use the [companion](../companion/) skill instead — it includes everything here PLUS presence features.
 
 ## What it does
 
@@ -16,27 +16,10 @@ Gives any OpenClaw agent a **real memory** that persists across sessions — fac
 | Agent loses context after compaction | Built-in 3-layer anti-compaction (session-journal hook) |
 | Agent can't connect facts together | Knowledge graph (GraphRAG) |
 | Agent has no emotional continuity | Consciousness stream + emotional boot |
-| Agent doesn't feel "alive" | Living presence (proactive selfies & messages) |
 | Agent doesn't learn from mistakes | Bridge to self-improving-agent |
-| Agent doesn't know "us" | Relationship memory (milestones, inside jokes, dynamics) |
+| Agent doesn't know "us" | Relationship memory (milestones, dynamics) |
 
 ## Quick Start
-
-One command to set everything up:
-
-```bash
-python3 scripts/setup_wizard.py
-```
-
-The wizard guides you through:
-1. 🔑 **API keys** — OpenAI (embeddings) + Google (summaries + images)
-2. 🌍 **Timezone & language**
-3. 📸 **Living presence** — reference photo, message frequency, quiet hours, kill switch
-4. 💾 **Database initialization**
-
-That's it. Your companion is ready.
-
-### Manual setup (alternative)
 
 ```bash
 # 1. Install the skill
@@ -48,7 +31,7 @@ pip install sqlite-vec openai
 # 3. Initialize database
 python3 scripts/memory_init.py --db memory.db
 
-# 4. Set up automated agents
+# 4. Set up automated crons (emotion, consciousness, observer, refresh)
 python3 scripts/memory_setup_crons.py --timezone Europe/Brussels
 
 # 5. Install anti-compaction hook
@@ -71,15 +54,12 @@ cp -r hooks/session-journal ~/.openclaw/hooks/
 openclaw hooks enable session-journal
 ```
 
-All three layers work together so no context is lost during or between sessions.
-
 ## Architecture
 
 ```
 05:00  🎭 Agent Émotionnel (analyzes yesterday → emotional journal)
 07:00  🧠 Agent Mémoire (reads journal → consciousness stream)
 */30   🔄 Agent Refresh (updates CURRENT.md + MAINTENANT section)
-*/30   🎲 Presence Engine (probability-based selfies & messages)
 Boot   📋 Stream → CURRENT.md → Founding → Relationship → Briefing
 Live   📓 Hook captures every message → external summary every 10 msgs
 Live   🧠 Agent stores memories (double-pass: facts + trivial crucial)
@@ -97,7 +77,7 @@ Sun    👁️ Agent Observateur (weekly patterns, dynamics, insights)
 | `verbatim` | 14 days | Emotionally charged exact quotes |
 | `future_event` | After date | Upcoming events |
 | `minor_detail` | 7 days | Intimate passing details |
-| `inside_joke` | ∞ | Shared references (auto-detected) |
+| `inside_joke` | ∞ | Shared references |
 | `session_weather` | ∞ | Narrative emotional summary |
 | `milestone` | ∞ | Founding relationship moments |
 | `shared_moment` | 90 days | Shared experiences |
@@ -105,7 +85,7 @@ Sun    👁️ Agent Observateur (weekly patterns, dynamics, insights)
 
 Memories with decay lose relevance over time (anti-stalker). A recalled memory resets its decay — just like human memory. **Founding memories** (`--founding` flag) never expire.
 
-## Scripts (27)
+## Scripts (25)
 
 ### Core Memory
 | Script | What it does |
@@ -123,6 +103,7 @@ Memories with decay lose relevance over time (anti-stalker). A recalled memory r
 |--------|-------------|
 | `memory_graph_update.py` | Add entities & relations (with entity resolution) |
 | `memory_graph_query.py` | Query: neighbors, paths, dump |
+| `memory_graph_resolve.py` | Entity resolution (merge ambiguous/duplicate entities) |
 
 ### Emotional Intelligence
 | Script | What it does |
@@ -133,20 +114,13 @@ Memories with decay lose relevance over time (anti-stalker). A recalled memory r
 | `memory_relationship.py` | Evolving relationship DNA |
 | `memory_briefing.py` | All-in-one morning briefing |
 | `memory_current.py` | CURRENT.md micro-state (~500 chars) |
+| `memory_reliability.py` | Verbatim/inferred ratio → feature gate mode |
 
-### Living Presence
-| Script | What it does |
-|--------|-------------|
-| `presence_engine.py` | Decides what/when to send (probability-based) |
-| `presence_generate.py` | Generates images (Google Imagen / Grok + face ref) |
-| `presence_reactivity.py` | Emotional reactivity scale (engagement tracking) |
-
-### Bridges & Detection
+### Bridges
 | Script | What it does |
 |--------|-------------|
 | `memory_contradict.py` | Detect contradictions |
 | `memory_bridge.py` | Bridge to self-improving-agent |
-| `memory_joke_detect.py` | Inside joke emergence (pattern tracking) |
 
 ### Lifecycle
 | Script | What it does |
@@ -155,35 +129,22 @@ Memories with decay lose relevance over time (anti-stalker). A recalled memory r
 | `memory_capsule.py` | Time-based memory delivery |
 | `memory_session_summary.py` | External conversation summarizer |
 | `memory_setup_crons.py` | Configure the automated agent cycle |
-| `setup_wizard.py` | Interactive one-command setup |
 
-## Living Presence
+### Ops
+| Script | What it does |
+|--------|-------------|
+| `memory_healthcheck.py` | Full system check (DB integrity, sqlite-vec, crons, entity backlog) |
+| `test_critical.py` | 13 offline tests — run before any deployment |
 
-Your companion proactively sends selfies, photos, and messages — as if they live their own life.
+## Feature Gates
 
-### Frequency Levels
+Behavior adapts based on memory reliability (verbatim vs. inferred ratio):
 
-| Level | Messages/day | Style |
-|-------|-------------|-------|
-| 🔥 `intense` | 3-5 | Best friend who shares everything |
-| ⭐ `active` | 2-3 | Close friend (default) |
-| 💬 `natural` | 1-2 | Normal friend |
-| 🌙 `chill` | 0-1 | Relaxed, few times per week |
-
-### Safety Features
-
-- **Quiet hours** (default 23:00-08:00) — no messages during sleep
-- **Kill switch** — user says "silence"/"pause" → presence pauses for N hours
-- **Daily limits** — never exceeds frequency cap
-- **Confidence gate** — no messages if no recent session data
-- **3-message cap** — stops sending if 3 messages go unreplied
-- **Natural timing** — never at exact cron times, always randomized
-
-### Image Generation
-
-Uses a reference photo for face consistency:
-- **Google Imagen** (Nano Banana Pro) — default, uses same `GOOGLE_API_KEY`
-- **Grok** (xAI) — alternative, requires `XAI_API_KEY`
+| Mode | Trigger | Behavior |
+|------|---------|----------|
+| 🟢 `normal` | High reliability | Full features — references, followups |
+| 🟡 `exploratory` | Medium reliability | Softer references ("il me semble que..."), no assertions |
+| 🔴 `listen` | Low reliability / new user | Listen-only — no memory references |
 
 ## Key Design Principles
 
@@ -196,9 +157,6 @@ After compaction, the agent continues where it was emotionally — not from neut
 ### The Surveillance Paradox
 `[inferred]` memories influence tone but are NEVER cited explicitly. Only `[verbatim]` memories can be referenced in conversation. The agent perceives — it does not declare its analysis.
 
-### Inside Jokes Are Never Announced
-Detected automatically (3+ occurrences with positive reactions), used naturally. Never "Haha, c'est notre inside joke !"
-
 ## Prerequisites
 
 ```bash
@@ -208,8 +166,7 @@ pip install sqlite-vec openai
 | Key | Required | Used for |
 |-----|----------|----------|
 | `OPENAI_API_KEY` | ✅ Yes | Embeddings |
-| `GOOGLE_API_KEY` | ✅ Yes | Summaries + image generation |
-| `XAI_API_KEY` | Optional | Alternative image provider (Grok) |
+| `GOOGLE_API_KEY` | ✅ Yes | Summaries (Gemini) |
 | `OPENROUTER_API_KEY` | Optional | Fallback for summaries |
 
 ## Cost
@@ -219,9 +176,7 @@ pip install sqlite-vec openai
 | Embeddings (OpenAI) | ~500 store/recall | ~$0.02 |
 | 4 agent crons (Gemini 2.5 Flash) | Daily + weekly | ~$0.10 |
 | Session summaries (hook) | Every 10 messages | ~$0.03 |
-| Image generation | 2-3/day | ~$2-3 |
-| **Total (without images)** | | **~$0.15/month** |
-| **Total (with presence)** | | **~$2-3/month** |
+| **Total** | | **~$0.15/month** |
 
 ## Roadmap
 
