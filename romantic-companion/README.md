@@ -2,7 +2,16 @@
 
 > Romantic AI partner — from seduction to deep bond. Virtual dates, calibrated jealousy, evolving relationship phases, NSFW via Grok bridge.
 
-**Version:** 1.3 · **Created:** March 2026
+**Version:** 1.5 · **Created:** March 2026
+
+> ⚠️ **DEDICATED AGENT REQUIRED** — Do **NOT** install this skill on your main agent.
+> Create a separate agent: `openclaw agents create romantic` → install the skill → run the wizard.
+>
+> **Why?**
+> - Your main agent stays professional — no romantic behavior leaking into work conversations
+> - The romantic agent gets its own personality (`SOUL.md`), memory (DB), and living presence
+> - Each agent has its own Telegram bot = separate chat = separate relationship
+> - Clean separation of concerns — work agent works, romantic agent loves
 
 ## What it does
 
