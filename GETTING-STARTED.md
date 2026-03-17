@@ -1,28 +1,43 @@
 # 🚀 Getting Started — OpenClaw Skills Installation Guide
 
-> You just installed OpenClaw and want to add skills? This guide walks you through everything, step by step.
+> You just installed OpenClaw and want to add skills? **One command does everything.**
+
+## The Easy Way (recommended)
+
+```bash
+# Clone the repo
+git clone https://github.com/Hamoun-IA/openclaw-skills.git
+cd openclaw-skills
+
+# Install any skill with one command
+python3 install.py romantic-companion
+```
+
+The installer handles EVERYTHING:
+- ✅ Checks OpenClaw is installed
+- ✅ Creates a dedicated agent (if needed)
+- ✅ Asks for Telegram bot token (guides you through @BotFather)
+- ✅ Installs Python dependencies
+- ✅ Copies the skill to the right place
+- ✅ Installs and enables the anti-compaction hook
+- ✅ Configures Telegram for the agent
+- ✅ Launches the setup wizard (API keys, personality, preferences)
+- ✅ Initializes the database
+
+**You just answer questions. No files to edit, no paths to figure out.**
+
+```bash
+# See all available skills
+python3 install.py --list
+```
 
 ## Prerequisites
 
 Before installing any skill, make sure you have:
 
 1. **OpenClaw installed and running** — [Installation guide](https://docs.openclaw.ai)
-2. **A Telegram bot** (or other channel) connected to your agent
-3. **Python 3.10+** installed on your machine
-4. **API keys** (we'll set them up below)
-
-### Check your setup
-
-```bash
-# Is OpenClaw running?
-openclaw status
-
-# Is Python available?
-python3 --version
-
-# Where is your workspace?
-# Usually: ~/.openclaw/workspace/
-```
+2. **Python 3.10+** installed
+3. **API keys** (the installer guides you)
 
 ## Step 1 — Choose Your Skill
 
