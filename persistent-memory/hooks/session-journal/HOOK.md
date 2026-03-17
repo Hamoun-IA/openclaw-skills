@@ -1,12 +1,12 @@
 ---
 name: session-journal
-description: "Automatically captures all messages to a journal file and triggers periodic summarization for conversation continuity across compaction."
+description: "Complete anti-compaction system. Captures all messages, summarizes periodically, updates CURRENT.md, and forces full save before compaction. No external plugin needed."
 metadata:
   {
     "openclaw":
       {
         "emoji": "📓",
-        "events": ["message:received", "message:sent"],
+        "events": ["message:received", "message:sent", "session:compact:before"],
         "requires": { "bins": ["python3"], "config": ["workspace.dir"] },
       },
   }
@@ -14,7 +14,14 @@ metadata:
 
 # Session Journal Hook
 
-Companion hook for the `persistent-memory` skill. Captures every message to a JSONL journal and triggers external summarization every N messages to maintain conversation context across compaction.
+Complete anti-compaction system for persistent-memory. **No Lossless Claw needed.**
+
+Three-layer protection:
+1. **Message capture** — every message logged to `.session_journal.jsonl`
+2. **Periodic summarization** — every 10 messages, external LLM summarizes → `.session_snapshot.md`
+3. **Compact:before save** — forced full save (summary + CURRENT.md) right before compaction
+
+Also updates CURRENT.md every 5 messages (lightweight, no LLM).
 
 ## What It Does
 

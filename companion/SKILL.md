@@ -41,28 +41,23 @@ Run once per agent: `scripts/memory_init.py --db memory.db`
 
 Load the appropriate profile from `references/profiles/` based on agent role. Default: `references/profiles/companion.md`. The profile defines extraction rules, categories, and recall strategies.
 
-## Compatibility with Lossless Claw (LCM)
+## Session Continuity (anti-compaction)
 
-This skill works best alongside the [Lossless Claw](https://github.com/Martian-Engineering/lossless-claw) plugin — a DAG-based context engine that replaces OpenClaw's built-in compaction. LCM handles intra-session continuity (short-term), this skill handles cross-session memory (long-term).
+The session-journal hook provides **complete anti-compaction protection** — no external plugin needed.
 
-**With LCM installed (recommended):**
-- LCM handles all intra-session context — no message is ever lost during a conversation
-- Disable the `session-journal` hook and the `memory-realtime-refresh` cron — they are redundant
-- Keep all other components: memory store/recall, graph, emotions, consciousness, observer, relationship
-- Install LCM: `openclaw plugins install @martian-engineering/lossless-claw`
+### Three-layer protection
 
-**Without LCM:**
-- The skill handles everything on its own with the session-journal hook + refresh agent
-- Less performant for intra-session continuity, but fully autonomous
+```
+Layer 1: MESSAGE CAPTURE (every message)
+  Hook logs every message → .session_journal.jsonl
+  
+Layer 2: PERIODIC SUMMARY (every 10 messages)
+  External LLM summarizes → .session_snapshot.md
+  CURRENT.md updated every 5 messages (lightweight)
 
-| Component | With LCM | Without LCM |
-|-----------|----------|-------------|
-| Intra-session continuity | ✅ LCM (DAG) | ⚠️ Hook + refresh |
-| Cross-session memory | ✅ This skill | ✅ This skill |
-| Emotion tracking | ✅ This skill | ✅ This skill |
-| Graph/Consciousness/Observer | ✅ This skill | ✅ This skill |
-
-## Session Continuity (anti-compaction — without LCM)
+Layer 3: COMPACT:BEFORE (emergency save)
+  Forced save right before compaction → summary + CURRENT.md
+```
 
 The companion hook `session-journal` automatically captures all messages and periodically summarizes them into `.session_snapshot.md`. This file survives compaction and keeps the agent coherent during long conversations.
 

@@ -1,20 +1,64 @@
 /**
- * Session Journal Hook — captures messages and triggers periodic summarization.
+ * Session Journal Hook — comprehensive anti-compaction system.
  *
- * Listens to message:received and message:sent events.
- * Appends each message to .session_journal.jsonl in the workspace.
- * Every SUMMARY_INTERVAL messages, runs memory_session_summary.py for external summarization.
+ * This hook is the ONLY anti-compaction mechanism needed (no LCM required).
+ *
+ * Listens to:
+ * - message:received / message:sent → captures every message to journal
+ * - session:compact:before → forces full save before compaction
+ *
+ * Every SUMMARY_INTERVAL messages:
+ * 1. Summarizes the journal → .session_snapshot.md
+ * 2. Updates CURRENT.md (micro-state)
+ *
+ * On compact:before:
+ * 1. Forces immediate summarization
+ * 2. Forces CURRENT.md update
+ * 3. Logs the compaction event
  */
 
-import { appendFileSync, readFileSync, existsSync } from "fs";
+import { appendFileSync, writeFileSync, readFileSync, existsSync } from "fs";
 import { join } from "path";
 import { execFile } from "child_process";
 
-// Track message counts per session to know when to trigger summarization
 const sessionMessageCounts: Map<string, number> = new Map();
+let lastSummaryTime: number = 0;
 
 const handler = async (event: any) => {
-  // Only handle message events
+  // --- Handle compact:before (critical save before compaction) ---
+  if (event.type === "session" && event.action === "compact:before") {
+    const workspaceDir = event.context?.workspaceDir;
+    if (!workspaceDir) return;
+
+    console.log("[session-journal] compact:before detected — forcing full save");
+
+    const journalPath = join(workspaceDir, ".session_journal.jsonl");
+    const snapshotPath = join(workspaceDir, ".session_snapshot.md");
+
+    // Log the compaction event
+    try {
+      const entry = JSON.stringify({
+        ts: new Date().toISOString(),
+        role: "system",
+        session: event.sessionKey || "unknown",
+        content: "[COMPACTION] Context about to be compacted",
+      });
+      appendFileSync(journalPath, entry + "\n", "utf-8");
+    } catch (err) {
+      console.error(`[session-journal] Failed to log compaction: ${err}`);
+    }
+
+    // Force immediate summarization
+    await triggerSummarization(workspaceDir, journalPath, snapshotPath, true);
+
+    // Force CURRENT.md update
+    await triggerCurrentUpdate(workspaceDir, journalPath);
+
+    event.messages?.push("📓 Session saved before compaction");
+    return;
+  }
+
+  // --- Handle messages ---
   if (event.type !== "message") return;
   if (event.action !== "received" && event.action !== "sent") return;
 
@@ -35,13 +79,12 @@ const handler = async (event: any) => {
   } else if (event.action === "sent") {
     content = event.context?.content || "";
     role = "assistant";
-    // Skip empty or NO_REPLY messages
     if (!content || content.trim() === "NO_REPLY") return;
   }
 
   if (!content || content.length < 2) return;
 
-  // Truncate very long messages (tool outputs, etc.)
+  // Truncate very long messages
   const maxLen = 1000;
   const truncated = content.length > maxLen ? content.substring(0, maxLen) + "..." : content;
 
@@ -60,15 +103,33 @@ const handler = async (event: any) => {
     return;
   }
 
-  // Count messages for this session
+  // Count messages
   const count = (sessionMessageCounts.get(sessionKey) || 0) + 1;
   sessionMessageCounts.set(sessionKey, count);
 
-  // Check if we should trigger summarization
+  // Trigger summarization every N messages
   const interval = parseInt(process.env.SUMMARY_INTERVAL || "10", 10);
-  if (count % interval !== 0) return;
+  if (count % interval === 0) {
+    await triggerSummarization(workspaceDir, journalPath, snapshotPath, false);
+  }
 
-  // Trigger summarization asynchronously (fire and forget)
+  // Update CURRENT.md every 5 messages (lightweight, no LLM call)
+  if (count % 5 === 0) {
+    await triggerCurrentUpdate(workspaceDir, journalPath);
+  }
+};
+
+async function triggerSummarization(
+  workspaceDir: string,
+  journalPath: string,
+  snapshotPath: string,
+  urgent: boolean
+): Promise<void> {
+  // Rate limit: don't summarize more than once per 2 minutes (unless urgent/compact:before)
+  const now = Date.now();
+  if (!urgent && now - lastSummaryTime < 120_000) return;
+  lastSummaryTime = now;
+
   const provider = process.env.SUMMARY_PROVIDER || "google";
   const model = process.env.SUMMARY_MODEL || "";
   const scriptDir = findScriptDir(workspaceDir);
@@ -87,40 +148,64 @@ const handler = async (event: any) => {
     "--keep-recent", "5",
   ];
 
-  if (model) {
-    args.push("--model", model);
-  }
+  if (model) args.push("--model", model);
 
-  console.log(`[session-journal] Triggering summarization (${count} messages, provider: ${provider})`);
+  const label = urgent ? "URGENT (compact:before)" : `periodic`;
+  console.log(`[session-journal] Summarization ${label} — ${provider}`);
 
-  execFile("python3", args, {
-    timeout: 60000,
+  return new Promise<void>((resolve) => {
+    execFile("python3", args, {
+      timeout: urgent ? 30_000 : 60_000,
+      env: { ...process.env },
+    }, (error, stdout, stderr) => {
+      if (error) {
+        console.error(`[session-journal] Summarization failed: ${error.message}`);
+      } else {
+        console.log(`[session-journal] ${stdout.trim()}`);
+      }
+      resolve();
+    });
+  });
+}
+
+async function triggerCurrentUpdate(
+  workspaceDir: string,
+  journalPath: string
+): Promise<void> {
+  const scriptDir = findScriptDir(workspaceDir);
+  if (!scriptDir) return;
+
+  const scriptPath = join(scriptDir, "memory_current.py");
+  const dbPath = join(workspaceDir, "memory.db");
+  const outputPath = join(workspaceDir, "CURRENT.md");
+
+  execFile("python3", [
+    scriptPath,
+    "--from-journal", journalPath,
+    "--db", dbPath,
+    "--output", outputPath,
+  ], {
+    timeout: 10_000,
     env: { ...process.env },
   }, (error, stdout, stderr) => {
     if (error) {
-      console.error(`[session-journal] Summarization failed: ${error.message}`);
-      if (stderr) console.error(`[session-journal] ${stderr}`);
-    } else {
-      console.log(`[session-journal] ${stdout.trim()}`);
+      console.error(`[session-journal] CURRENT.md update failed: ${error.message}`);
     }
   });
-};
+}
 
-/**
- * Find the persistent-memory scripts directory.
- * Checks common locations in order.
- */
 function findScriptDir(workspaceDir: string): string | null {
   const candidates = [
-    // Workspace-local skill
     join(workspaceDir, "skills", "persistent-memory", "scripts"),
-    // Global skills
+    join(workspaceDir, "skills", "companion", "scripts"),
+    join(workspaceDir, "skills", "romantic-companion", "scripts"),
     join(process.env.HOME || "~", ".openclaw", "skills", "persistent-memory", "scripts"),
+    join(process.env.HOME || "~", ".openclaw", "skills", "companion", "scripts"),
+    join(process.env.HOME || "~", ".openclaw", "skills", "romantic-companion", "scripts"),
   ];
 
   for (const dir of candidates) {
-    const scriptPath = join(dir, "memory_session_summary.py");
-    if (existsSync(scriptPath)) {
+    if (existsSync(join(dir, "memory_session_summary.py"))) {
       return dir;
     }
   }
