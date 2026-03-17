@@ -48,11 +48,11 @@ const handler = async (event: any) => {
       console.error(`[session-journal] Failed to log compaction: ${err}`);
     }
 
-    // Force immediate summarization
-    await triggerSummarization(workspaceDir, journalPath, snapshotPath, true);
-
-    // Force CURRENT.md update
+    // CURRENT.md FIRST (< 100ms, no LLM, guaranteed fast)
     await triggerCurrentUpdate(workspaceDir, journalPath);
+
+    // THEN summarization (may take up to 10s, has raw fallback if timeout)
+    await triggerSummarization(workspaceDir, journalPath, snapshotPath, true);
 
     event.messages?.push("📓 Session saved before compaction");
     return;
@@ -130,12 +130,33 @@ async function triggerSummarization(
   if (!urgent && now - lastSummaryTime < 120_000) return;
   lastSummaryTime = now;
 
+  // Skip if less than 3 messages in journal (not worth summarizing)
+  try {
+    const journalContent = readFileSync(journalPath, "utf-8");
+    const lineCount = journalContent.split("\n").filter(l => l.trim()).length;
+    if (lineCount < 3 && !urgent) return;
+  } catch { /* file may not exist yet */ }
+
   const provider = process.env.SUMMARY_PROVIDER || "google";
   const model = process.env.SUMMARY_MODEL || "";
   const scriptDir = findScriptDir(workspaceDir);
 
   if (!scriptDir) {
     console.error("[session-journal] Could not find memory_session_summary.py");
+    // Fallback: write raw last messages as snapshot if urgent
+    if (urgent) {
+      try {
+        const raw = readFileSync(journalPath, "utf-8");
+        const lines = raw.split("\n").filter(l => l.trim()).slice(-10);
+        const fallback = `<!-- FALLBACK: LLM summarization failed, raw messages -->\n# Session Snapshot (raw)\n\n${lines.map(l => {
+          try { const m = JSON.parse(l); return \`- \${m.role}: \${m.content?.substring(0, 200)}\`; } catch { return ""; }
+        }).filter(Boolean).join("\n")}\n`;
+        writeFileSync(snapshotPath, fallback, "utf-8");
+        console.log("[session-journal] Wrote raw fallback snapshot");
+      } catch (e) {
+        console.error(`[session-journal] Fallback snapshot failed: ${e}`);
+      }
+    }
     return;
   }
 
@@ -150,16 +171,32 @@ async function triggerSummarization(
 
   if (model) args.push("--model", model);
 
-  const label = urgent ? "URGENT (compact:before)" : `periodic`;
-  console.log(`[session-journal] Summarization ${label} — ${provider}`);
+  // For urgent (compact:before), use shorter timeout (10s) and try fallback on failure
+  const timeout = urgent ? 10_000 : 60_000;
+  const label = urgent ? "URGENT (compact:before)" : "periodic";
+  console.log(`[session-journal] Summarization ${label} — ${provider} (timeout: ${timeout}ms)`);
 
   return new Promise<void>((resolve) => {
     execFile("python3", args, {
-      timeout: urgent ? 30_000 : 60_000,
+      timeout,
       env: { ...process.env },
     }, (error, stdout, stderr) => {
       if (error) {
         console.error(`[session-journal] Summarization failed: ${error.message}`);
+        // On urgent failure: write raw fallback
+        if (urgent) {
+          try {
+            const raw = readFileSync(journalPath, "utf-8");
+            const lines = raw.split("\n").filter(l => l.trim()).slice(-10);
+            const fallback = `<!-- FALLBACK: LLM timeout, raw messages preserved -->\n# Session Snapshot (raw)\n\n${lines.map(l => {
+              try { const m = JSON.parse(l); return \`- \${m.role}: \${m.content?.substring(0, 200)}\`; } catch { return ""; }
+            }).filter(Boolean).join("\n")}\n`;
+            writeFileSync(snapshotPath, fallback, "utf-8");
+            console.log("[session-journal] Wrote raw fallback snapshot (LLM timeout)");
+          } catch (e) {
+            console.error(`[session-journal] Fallback failed: ${e}`);
+          }
+        }
       } else {
         console.log(`[session-journal] ${stdout.trim()}`);
       }

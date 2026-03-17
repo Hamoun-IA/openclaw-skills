@@ -98,11 +98,12 @@ The snapshot contains: current topic, key decisions, people mentioned, tone, and
 
 Read these files in order at the start of every session. **Order matters — emotional state FIRST:**
 
-1. `consciousness-stream.md` — **RESUME the emotional register.** If the stream says "mode taquin, on se charriait", do NOT restart in neutral/polite mode. The Instruction field tells you what to do.
-2. `CURRENT.md` — micro-state (~500 chars): topic, context, relationship
-3. Founding memories — load via `scripts/memory_recall.py --boot` (founding tagged memories always load)
-4. `relationship.md` — relationship DNA (tone, inside jokes, patterns)
-5. Run `scripts/memory_briefing.py` — capsules, threads, events, recent learnings
+1. `consciousness-stream.md` — **RESUME the emotional register.** The Instruction field tells you what to do.
+2. `CURRENT.md` — micro-state (~500 chars): mood, topic, context, relationship
+3. **Fusion rule:** If CURRENT.md is MORE RECENT than consciousness-stream.md → CURRENT.md takes priority for emotional state. Check the `<!-- Updated: -->` timestamps.
+4. Founding memories — load via `scripts/memory_recall.py --boot` (max 20 founding memories at boot)
+5. `relationship.md` — relationship DNA (tone, inside jokes, patterns)
+6. Run `scripts/memory_briefing.py` — capsules, threads, events, recent learnings
 
 **Principle: Write > Think.** Files survive compaction, context does not.
 **Principle: Resume, don't restart.** After compaction, the agent continues where it was, not from zero.

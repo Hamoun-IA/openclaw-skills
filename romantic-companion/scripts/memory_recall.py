@@ -101,13 +101,26 @@ def recall_memories(db_path, query, limit=5, threshold=0.3, category=None,
         for e in events:
             results.append(dict(e) | {"similarity": 1.0, "tags": [], "decay": 1.0, "section": "Upcoming Events"})
 
-        # 3. High-importance core memories
+        # 3. Founding memories (hard cap 20 at boot)
+        founding = conn.execute("""
+            SELECT DISTINCT m.id, m.content, m.category, m.importance, m.created_at, m.access_count
+            FROM memories m
+            JOIN memory_tags t ON t.memory_id = m.id
+            WHERE t.tag = 'founding' AND m.active = 1
+            ORDER BY m.importance DESC, m.created_at ASC LIMIT 20
+        """).fetchall()
+        for f in founding:
+            results.append(dict(f) | {"similarity": 1.0, "tags": ["founding"], "decay": 1.0, "section": "Founding Memories"})
+
+        # 4. High-importance core memories (non-founding)
+        founding_ids = {f["id"] for f in founding}
         core = conn.execute("""
             SELECT id, content, category, importance, created_at, access_count
             FROM memories WHERE importance >= 0.8 AND active = 1
             AND category NOT IN ('session_weather', 'future_event')
             ORDER BY access_count DESC, importance DESC LIMIT 10
         """).fetchall()
+        core = [c for c in core if c["id"] not in founding_ids]
         for c in core:
             results.append(dict(c) | {"similarity": 1.0, "tags": [], "decay": 1.0, "section": "Core Memories"})
 
