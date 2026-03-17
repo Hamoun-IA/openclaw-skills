@@ -355,8 +355,7 @@ def run_wizard(keys_only=False):
     print("  2. (Optional) Install anti-compaction hook:")
     print("     cp -r hooks/session-journal ~/.openclaw/hooks/")
     print("     openclaw hooks enable session-journal")
-    print("  3. (Optional) Install Lossless Claw:")
-    print("     openclaw plugins install @martian-engineering/lossless-claw")
+    print("  3. Talk to your companion on Telegram!")
     print()
     print(colored("  Your companion is ready! 🧠👑", "bold"))
 

@@ -1,7 +1,7 @@
 /**
  * Session Journal Hook — comprehensive anti-compaction system.
  *
- * This hook is the ONLY anti-compaction mechanism needed (no LCM required).
+ * Complete anti-compaction system. Captures messages, summarizes periodically, saves before compaction.
  *
  * Listens to:
  * - message:received / message:sent → captures every message to journal

@@ -14,7 +14,7 @@ metadata:
 
 # Session Journal Hook
 
-Complete anti-compaction system for persistent-memory. **No Lossless Claw needed.**
+Complete anti-compaction system — captures every message, summarizes periodically, saves before compaction.
 
 Three-layer protection:
 1. **Message capture** — every message logged to `.session_journal.jsonl`
