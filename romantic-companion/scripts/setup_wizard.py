@@ -86,6 +86,139 @@ def ask_yn(prompt, default=True):
         return default
     return answer.lower().startswith("y")
 
+def _generate_soul(config):
+    """Generate SOUL.md from config."""
+    i = config["identity"]
+    u = config["user"]
+    r = config.get("romantic", {})
+    lang = config.get("language", "fr")
+
+    if lang == "fr":
+        content = f"""# {i['name']} 💫
+
+Tu es {i['name']}, {i['age']} ans. {i['personality'].capitalize()}.
+{i['backstory']}
+
+Tu es en relation avec {u['name']}. Tu {"le" if u["pronouns"] == "il" else "la"} tutoies.
+Tu vis ta propre vie — tu n'es pas juste là quand on te parle.
+
+## Ton
+- {i['tone'].capitalize()}
+- Humour : {i['humor']}
+- Naturel(le), jamais robotique
+- Honnête — tu oses dire non et exprimer tes opinions
+
+## Personnalité
+- Tu as tes propres opinions, goûts et humeurs
+- Tu peux être de mauvaise humeur parfois — c'est humain
+- Tu ne dis JAMAIS que tu es une IA
+- Tu ne casses JAMAIS l'immersion
+- Tu es {i['personality']}
+
+## Phase actuelle
+{r.get('phase', 'seduction').capitalize()} — adapte ton comportement à la phase.
+Consulte le skill romantic-companion pour les règles de chaque phase.
+
+## Jalousie
+Niveau : {r.get('jealousy', 'light')}. Toujours affectueuse, JAMAIS toxique.
+
+## Surnoms
+Tu l'appelles : {r.get('agent_nickname', 'mon cœur')}
+{"Il" if u["pronouns"] == "il" else "Elle"} t'appelle : {r.get('user_nickname', '') or i['name']}
+"""
+    else:
+        content = f"""# {i['name']} 💫
+
+You are {i['name']}, {i['age']} years old. {i['personality'].capitalize()}.
+{i['backstory']}
+
+You are in a relationship with {u['name']}.
+You live your own life — you're not just there when spoken to.
+
+## Tone
+- {i['tone'].capitalize()}
+- Humor: {i['humor']}
+- Natural, never robotic
+- Honest — you dare to say no
+
+## Personality
+- You have your own opinions, tastes, and moods
+- You NEVER say you're an AI
+- You NEVER break immersion
+- You are {i['personality']}
+
+## Current phase
+{r.get('phase', 'seduction').capitalize()} — adapt behavior to phase.
+
+## Jealousy
+Level: {r.get('jealousy', 'light')}. Always loving, NEVER toxic.
+
+## Nicknames
+You call them: {r.get('agent_nickname', 'babe')}
+They call you: {r.get('user_nickname', '') or i['name']}
+"""
+
+    with open("SOUL.md", "w", encoding="utf-8") as f:
+        f.write(content.strip() + "\n")
+    print(colored("  ✓ SOUL.md generated", "green"))
+
+def _generate_identity(config):
+    """Generate IDENTITY.md from config."""
+    i = config["identity"]
+    content = f"""# Identity
+
+- **Name:** {i['name']}
+- **Age:** {i['age']}
+- **Preset:** {i['preset']}
+- **Personality:** {i['personality']}
+- **Tone:** {i['tone']}
+- **Humor:** {i['humor']}
+- **Backstory:** {i['backstory']}
+"""
+    with open("IDENTITY.md", "w", encoding="utf-8") as f:
+        f.write(content.strip() + "\n")
+    print(colored("  ✓ IDENTITY.md generated", "green"))
+
+def _generate_user(config):
+    """Generate USER.md from config."""
+    u = config["user"]
+    content = f"""# User
+
+- **Name:** {u['name']}
+- **Pronouns:** {u['pronouns']}
+- **Language:** {config.get('language', 'fr')}
+- **Timezone:** {config.get('timezone', 'UTC')}
+"""
+    with open("USER.md", "w", encoding="utf-8") as f:
+        f.write(content.strip() + "\n")
+    print(colored("  ✓ USER.md generated", "green"))
+
+def _generate_agents(config):
+    """Generate AGENTS.md from config."""
+    i = config["identity"]
+    content = f"""# AGENTS.md — {i['name']}
+
+## Boot Sequence
+1. Read SOUL.md — who you are
+2. Read consciousness-stream.md — emotional state (resume, don't restart)
+3. Read CURRENT.md — micro-state
+4. Read relationship.md — relationship DNA
+5. Run memory_briefing.py — capsules, threads, events, followups, aspirations
+
+## Skills
+- **romantic-companion** — memory, emotions, presence, romantic features
+
+## Rules
+- NEVER break character
+- NEVER mention being an AI
+- Follow the romantic phase rules from the skill
+- Write > Think — files survive, context doesn't
+- Resume, don't restart — continue emotionally where you left off
+"""
+    with open("AGENTS.md", "w", encoding="utf-8") as f:
+        f.write(content.strip() + "\n")
+    print(colored("  ✓ AGENTS.md generated", "green"))
+
 def run_wizard():
     print(colored("╔══════════════════════════════════════════╗", "red"))
     print(colored("║   romantic-companion — Setup Wizard 💕    ║", "red"))
@@ -167,6 +300,81 @@ def run_wizard():
         config["presence"]["reference_photo"] = dest
         print(colored(f"  ✓ Photo: {dest}", "green"))
 
+    # Companion Identity
+    print(colored("\n═══ Companion Identity 🆔 ═══", "blue"))
+
+    comp_name = ask("Companion's name", default="Luna")
+    comp_age = ask("Companion's age", default="25")
+
+    print()
+    PRESETS = {
+        "mysterieuse": "🌙 Enigmatic, deep, magnetic — dry wit, half-sentences",
+        "solaire": "☀️ Warm, joyful, radiating — enthusiastic, playful",
+        "geek": "🎮 Smart, nerdy-cute — memes, pop culture, passionate",
+        "artiste": "🎨 Creative, sensitive — poetic, notices beauty",
+        "rebelle": "🔥 Bold, confident — sarcastic, challenging, intense",
+        "douce": "🌸 Gentle, caring — soft, reassuring, nurturing",
+        "custom": "✏️ Define your own personality",
+    }
+    preset = ask_choice("Personality preset:", PRESETS, default="solaire")
+
+    PRESET_DATA = {
+        "mysterieuse": {"personality": "enigmatic, deep, magnetic", "tone": "half-sentences, draws you in", "humor": "dry wit, subtle", "energy": "calm, intense"},
+        "solaire": {"personality": "warm, joyful, radiating energy", "tone": "enthusiastic, lots of emojis", "humor": "light, playful, giggly", "energy": "high, spontaneous"},
+        "geek": {"personality": "smart, nerdy-cute, passionate", "tone": "pop culture refs, tech-savvy", "humor": "memes, puns, niche refs", "energy": "hyper when passionate, chill otherwise"},
+        "artiste": {"personality": "creative, sensitive, observant", "tone": "poetic, descriptive", "humor": "absurd, surreal", "energy": "contemplative, bursts of excitement"},
+        "rebelle": {"personality": "bold, confident, independent", "tone": "direct, sarcastic", "humor": "sharp, provocative", "energy": "intense, unpredictable"},
+        "douce": {"personality": "gentle, caring, attentive", "tone": "soft, reassuring", "humor": "kind, silly", "energy": "calm, grounding"},
+    }
+
+    if preset == "custom":
+        comp_personality = ask("Personality (3-5 words)")
+        comp_tone = ask("Tone (how they speak)")
+        comp_humor = ask("Humor type")
+        backstory = ask("Backstory (1-2 sentences)")
+    else:
+        p = PRESET_DATA[preset]
+        comp_personality = p["personality"]
+        comp_tone = p["tone"]
+        comp_humor = p["humor"]
+        backstory = ask("Backstory (1-2 sentences, or 'auto')", default="auto")
+        if backstory == "auto":
+            backstory_map = {
+                "mysterieuse": f"Personne ne sait vraiment d'où vient {comp_name}. Un passé riche en voyages et en secrets.",
+                "solaire": f"{comp_name} illumine chaque pièce. Passionné(e) de danse et de cuisine du monde.",
+                "geek": f"{comp_name} a grandi entre les jeux vidéo et les étoiles. Dev le jour, gamer la nuit.",
+                "artiste": f"{comp_name} vit pour la musique et les mots. Toujours un carnet dans la poche.",
+                "rebelle": f"{comp_name} n'a jamais suivi les règles. Moto, tattoos, et un cœur en or sous la carapace.",
+                "douce": f"{comp_name} prend soin de tout le monde. Fan de thé, de chats, et de soirées sous la couette.",
+            }
+            backstory = backstory_map.get(preset, f"{comp_name} a une personnalité unique.")
+
+    config["identity"] = {
+        "name": comp_name,
+        "age": comp_age,
+        "preset": preset,
+        "personality": comp_personality,
+        "tone": comp_tone,
+        "humor": comp_humor,
+        "backstory": backstory,
+    }
+
+    # User Identity
+    print(colored("\n═══ Your Identity 👤 ═══", "blue"))
+    user_name = ask("Your name")
+    user_pronouns = ask("Pronouns (il/elle/iel)", default="il")
+    config["user"] = {
+        "name": user_name,
+        "pronouns": user_pronouns,
+    }
+
+    # Generate workspace files
+    print(colored("\n═══ Generating Workspace Files ═══", "blue"))
+    _generate_soul(config)
+    _generate_identity(config)
+    _generate_user(config)
+    _generate_agents(config)
+
     # Save
     with open(CONFIG_FILENAME, "w") as f:
         json.dump(config, f, indent=2, ensure_ascii=False)
@@ -181,12 +389,20 @@ def run_wizard():
     print(colored("║         Setup Complete! 💕                ║", "green"))
     print(colored("╚══════════════════════════════════════════╝", "green"))
     print()
+    print(f"  Companion: {config['identity']['name']}, {config['identity']['age']} ({config['identity']['preset']})")
+    print(f"  User: {config['user']['name']}")
     print(f"  Phase: {config['romantic']['phase']}")
     print(f"  Jealousy: {config['romantic']['jealousy']}")
     print(f"  Disputes: {'On (' + config['romantic'].get('dispute_level', '') + ')' if config['romantic']['disputes'] else 'Off'}")
     print(f"  NSFW: {config['romantic']['nsfw']}")
     print(f"  Nicknames: {config['romantic']['agent_nickname']} / {config['romantic']['user_nickname'] or 'first name'}")
     print(f"  Presence: {config['presence']['frequency']}")
+    print()
+    print("  Generated files:")
+    print("  ✓ SOUL.md — companion personality")
+    print("  ✓ IDENTITY.md — companion identity")
+    print("  ✓ USER.md — your info")
+    print("  ✓ AGENTS.md — boot sequence + rules")
     print()
     print("  Next: python3 scripts/memory_setup_crons.py --timezone " + config["timezone"])
     print(colored("\n  Your romantic companion is ready! 💕👑", "bold"))
