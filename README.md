@@ -38,6 +38,7 @@ python3 install.py --list
 | [**persistent-memory**](./persistent-memory/README.md) | 3.9 | Long-term memory + emotional intelligence (standalone, no presence) |
 | [**romantic-companion**](./romantic-companion/README.md) | 1.5 | Romantic AI partner — seduction to deep bond, virtual dates, NSFW via Grok ⚠️ _dedicated agent required_ |
 | [**agent-pulse**](./agent-pulse/README.md) | 2.2 | Inter-agent visibility protocol — departure signals, heartbeat, completion reports, escalation, promise tracker |
+| [**jina-search**](./jina-search/README.md) | 1.0 | Web search, page reader, fact-checking & reranking via Jina AI |
 
 ## 🚀 New here? → [Getting Started Guide](./GETTING-STARTED.md)
 
